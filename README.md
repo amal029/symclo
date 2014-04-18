@@ -51,6 +51,10 @@ symclo.core> (simplify (** a (* -1 (! 5))))
 
 ((** a -120))
 
+symclo.core> (simplify (/ a (! 5)))
+
+((* (** 120 -1) a))
+
 ### Do multiple expressions together
 symclo.core> (simplify (/ (/ a b) a) (** (/ 1 x) -2))
 
