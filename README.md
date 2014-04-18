@@ -47,6 +47,7 @@ symclo.core> (simplify (/ (/ a b) a))
 ((** b -1))
 
 
+### Do multiple expressions together
 symclo.core> (simplify (/ (/ a b) a) (** (/ 1 x) -2))
 
 ((** b -1) (** x 2))
