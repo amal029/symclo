@@ -184,7 +184,7 @@
    :else (* op (factorial (- op 1)))))
 
 (defn- simplify-factorial [[_ op]]
-   (if (integer? op) (factorial op) (list '! op)))
+   (if (integer? op) (factorial (biginteger op)) (list '! op)))
 
 ;;; simplify-function 
 ;; FIXME: can add trignometric and other function
