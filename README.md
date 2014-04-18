@@ -28,6 +28,7 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 * '+ addition
 * '- subtraction
 * '/ quotient or fraction
+* '! factorial
 
 # Example REPL session
 symclo.core> (simplify (* a b (** a (/ 1 2))))
@@ -46,6 +47,9 @@ symclo.core> (simplify (/ (/ a b) a))
 
 ((** b -1))
 
+symclo.core> (simplify (** a (* -1 (! 5))))
+
+((** a -120))
 
 ### Do multiple expressions together
 symclo.core> (simplify (/ (/ a b) a) (** (/ 1 x) -2))
