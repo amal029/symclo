@@ -23,11 +23,11 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 (simplify (expr)*)
 
 # Operators:
-'* multiply
-'** exponentiation
-'+ addition
-'- subtraction
-'/ quotient or fraction
+* '* multiply
+* '** exponentiation
+* '+ addition
+* '- subtraction
+* '/ quotient or fraction
 
 # Example REPL session
 symclo.core> (simplify (* a b (** a (/ 1 2))))
