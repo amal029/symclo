@@ -59,6 +59,14 @@ symclo.core> (simplify (+ (+ a b) (+ a b)) (+ (- a b) (- a b)))
 
 ((+ (* 2 a) (* 2 b)) (+ (* 2 a) (* -2 b)))
 
+symclo.core> (simplify (+ (+ a b) (+ a b)) (+ a b a b))
+
+((+ (* 2 a) (* 2 b)) (+ (* 2 a) (* 2 b)))
+
+### Check equality of two expressions
+symclo.core> (= (simplify (+ a b a b)) (simplify (+ (+ a b) (+ a b))))
+true
+
 ## License
 
 Copyright © 2014 FIXME
