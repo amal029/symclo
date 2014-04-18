@@ -12,7 +12,7 @@ Trigonometric simplification.
 
 Polynomial factorization
 
-Simplification of polynomials with coefficients in the Q field.
+Simplification of polynomials with imaginary coefficients.
 
 Polynomial integration
 
