@@ -55,6 +55,10 @@ symclo.core> (simplify (* (+ a b) (+ a b)) (* (- a b) (- a b)))
 
 ((** (+ a b) 2) (** (+ a (* -1 b)) 2))
 
+symclo.core> (simplify (+ (+ a b) (+ a b)) (+ (- a b) (- a b)))
+
+((+ (* 2 a) (* 2 b)) (+ (* 2 a) (* -2 b)))
+
 ## License
 
 Copyright © 2014 FIXME
