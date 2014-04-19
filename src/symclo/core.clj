@@ -2,6 +2,7 @@
   (:gen-class))
 (use '[clojure.core.match :only (match)])
 (use 'clojure.math.numeric-tower)
+(use 'clojure.tools.trace)
 
 ;;; forward declarations for mutually recursive functions
 (declare simplify-power)
@@ -15,8 +16,7 @@
 (declare simplify-sum-rec)
 
 ;;; Euclid's gcd algorithm
-(defn integer_gcd 
-  "(gcd a b) computes the greatest common divisor of a and b."
+(defn- integer_gcd 
   [a b]
   (if (zero? b) a
       (recur b (mod a b))))
@@ -349,6 +349,7 @@
       (= y 1) (list x)
       (= (base x) (base y)) (let [s (simplify-sum (list (exponent x) (exponent y)))
                                   p (simplify-power (list '** (base x) s))]
+                              (prn "rec: " p)
                               (cond 
                                (= p 1) '()
                                (not (= p 1)) (list p)))
@@ -405,11 +406,23 @@
    (some #(= 0 %) u) 0
    (= (count u) 1) u
    :else (let [v (simplify-product-rec u)]
-           (do 
-             (cond
-              (= (count v) 1) (first v)
-              (= (count v) 0) 1
-              :else (reduce #(list '* % %2) v))))))
+           (cond
+            (= (count v) 1) (first v)
+            (= (count v) 0) 1 ;BUG (FIXME). Sometimes this comes out!!
+            :else (cond 
+                   (or (= (kind (first v)) :number)(= (kind (first v)) :fracop))
+                   (let [
+                         non-sum (reduce #(list '* % %2) (filter #(not (= (kind %) :sumop)) v))
+                         sum (filter #(= (kind %) :sumop) v)
+                         res (map #(cond
+                                    (= (kind %) :sumop) (let [[_ x y] %] (list '+ (simplify-product (list (first v) x)) 
+                                                                               (simplify-product (list (first v) y))))
+                                    :else %) sum)]
+                     (cond
+                      (and (not (= non-sum (first v))) (not (= (count res) 0))) (list '* non-sum res)
+                      (not (= (count res) 0)) res
+                      :else non-sum))
+                   :else (reduce #(list '* % %2) v))))))
 
 ;;; simplify-sum
 (defn- simplify-sum [u]
@@ -424,7 +437,7 @@
 
 
 ;;; The main automatic simplification function
-(defn simplify* [u]
+(defn- simplify* [u]
   (match [(kind u)]
          [:number] u
          [:symbol] u
@@ -441,9 +454,5 @@
 
 (defmacro simplify [& args]
   `(map simplify* '(~@args)))
-
-;; (defn -main [& args]
-;;   "I don't do a whole lot."
-;;   (println args "Hello, World!"))
 
 
