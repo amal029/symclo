@@ -374,6 +374,78 @@
                        (= (kind (first op)) :prodop) (merge-products (rest (first op)) w)
                        :else (merge-products (list (first op)) w)))))
 
+(defn- can-do? [u v]
+  (cond
+   (and (and (= (kind u) :prodop) (= (kind v) :prodop))
+        (and (= (count (rest u)) 2))
+        (and (= (count (rest u))) (= (count (rest v)))))
+   (let
+       [[_ cu ou] u
+        [_ cv ov] v]
+     (if (and (= (base ou) (base ov))
+              (= (exponent ou) (exponent ov))
+              (or (= (kind cu) :fracop) (= (kind cu) :number))
+              (or (= (kind cv) :fracop) (= (kind cv) :number)))
+       true false))
+   (= (kind u) :prodop)
+   (let
+       [[_ cu ou] u]
+     (if (and (= (base ou) (base v))
+              (= (exponent ou) (exponent v))
+              (or (= (kind cu) :fracop) (= (kind cu) :number)))
+       true false)) 
+   (= (kind v) :prodop)
+   (let
+       [[_ cv ov] v]
+     (if (and (= (base ov) (base u))
+              (= (exponent ov) (exponent u))
+              (or (= (kind cv) :fracop) (= (kind cv) :number)))
+       true false)) 
+   :else false))
+
+;;; Getting the coefficients
+(defn- get-coefficients [u v]
+  (cond 
+   (and (= (kind u) :prodop) (= (kind v) :prodop)) 
+   (let 
+       [
+        [_ cu ou] u
+        [_ cv ov] v
+        cu 
+        (cond
+         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :number) cu
+         :else (throw (Throwable. (str "Wrong type: " cu))))
+        cv
+        (cond
+         (= (kind cv) :fracop) (/ (let [[_ n _] cv] n) (let [[_ _ d] cv] d))
+         (= (kind cv) :number) cv
+         :else (throw (Throwable. (str "Wrong type: " cv))))
+        ]
+     (simplify-rne (list '+ cu cv)))
+   (= (kind u) :prodop) 
+   (let 
+       [
+        [_ cu ou] u
+        cu 
+        (cond
+         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :number) cu
+         :else (throw (Throwable. (str "Wrong type: " cu))))
+        ]
+     (simplify-rne (list '+ cu 1)))
+   :else 
+   (let 
+       [
+        [_ cu ou] v
+        cu 
+        (cond
+         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :number) cu
+         :else (throw (Throwable. (str "Wrong type: " cu))))
+        ]
+     (simplify-rne (list '+ cu 1)))))
+
 ;;; simplify-sum-rec
 (defn- simplify-sum-rec [op]
   (cond
@@ -386,10 +458,19 @@
         (if (= p 0) '() (list p)))
       (= x 0) (list y)
       (= y 0) (list x)
-      (and (= (base x) (base y)) (= (exponent x) (exponent y))) (let [p (simplify-product (list 2 x))]
-                                                                  (cond
-                                                                   (= p 0) '()
-                                                                   :else (list p)))
+      (and (= (base x) (base y)) (= (exponent x) (exponent y))) 
+      (let [p (simplify-product (list 2 x))]
+        (cond
+         (= p 0) '()
+         :else (list p)))
+      ;; Maybe this can be done in some better way?
+      ;; In some other place?
+      (can-do? x y)
+      (let [res (get-coefficients x y)
+            p (simplify-product (list res x))]
+        (cond
+         (= p 0) '()
+         :else (list p)))
       ;; lex-less-than is the ordering constraint for the cannoican normal form
       (algebra-compare y x) (list y x)
       :else (list x y))) 
