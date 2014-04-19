@@ -22,6 +22,7 @@
       (recur b (mod a b))))
 
 ;;; The type of the operator
+;; (throw (Throwable. (str op " is type: " (type op) "\n")))
 (defn- kind-op [op]
   (cond 
    (= (first op) '*) :prodop
@@ -30,8 +31,7 @@
    (= (first op) '-) :diffop
    (= (first op) '!) :factop
    (and (= (first op) '/) (= (count (rest op)) 2)) (let [[_ x y] op] (if (and (integer? x) (integer? y)) :fracop :quotop))
-   :else (throw (Throwable. (str op " is type: " (type op) "\n")))
-   ))
+   :else :function))
 
 ;;; The type of the number or operator?
 (defn- kind [u]
@@ -221,7 +221,10 @@
   (cond
    (and (or (= (kind u) :number) (= (kind u) :fracop))
         (or (= (kind v) :number) (= (kind v) :fracop))) 
-   (< u v)
+   (let 
+       [u (if (= (kind u) :number) u (/ (let [[_ x _] u] x) (let [[_ _ y] u] y)))
+        v (if (= (kind v) :number) v (/ (let [[_ x _] v] x) (let [[_ _ y] v] y)))]
+       (< u v))
    (and (= (kind u) :symbol) (= (kind v) :symbol)) (let [res (sort (list u v))]
                                                      (cond 
                                                       (= (first res) u) true
@@ -233,20 +236,22 @@
      (cond
       (not (= (last uops) (last vops))) (algebra-compare (last uops) (last vops))
       (reduce #(or % %2) (map #(if-not (= % %2) (algebra-compare % %2) false) 
-                              (reverse uops) (reverse vops))) true
-                              :else (< (count uops) (count vops))))
+                              (reverse uops) (reverse vops))) 
+      true
+      :else (< (count uops) (count vops))))
    (and (= (kind u) :powop) (= (kind v) :powop)) (cond
                                                   (not (= (base u) (base v))) (algebra-compare (base u) (base v))
                                                   :else (algebra-compare (exponent u) (exponent v)))
    (and (= (kind u) :factop) (= (kind v) :factop)) (algebra-compare (last u) (last v))
    (and (= (kind u) :function) (= (kind v) :function)) (cond
                                                         (not (= (first u) (first v))) (algebra-compare (first u) (first v))
-                                                        (= (kind u) (kind v)) (cond
-                                                                               (not (= (first (rest u)) (first (rest v))))
-                                                                               (algebra-compare (first (rest u)) (first (rest v)))
-                                                                               (reduce #(or % %2) (map #(if-not (= % %2) (algebra-compare % %2) false) 
-                                                                                                       (rest u) (reverse v))) true
-                                                                                                       :else (< (count (rest u)) (count (rest v)))))
+                                                        :else (cond
+                                                               (not (= (first (rest u)) (first (rest v))))
+                                                               (algebra-compare (first (rest u)) (first (rest v)))
+                                                               (reduce #(or % %2) (map #(if-not (= % %2) (algebra-compare % %2) false) 
+                                                                                       (rest u) (reverse v))) 
+                                                               true
+                                                               :else (< (count (rest u)) (count (rest v)))))
    ;; O-7
    (and (or (= (kind u) :number) (= (kind u) :fracop)) 
         (and (not (= (kind v) :number)) (not (= (kind v) :fracop)))) 
@@ -455,4 +460,3 @@
 
 (defmacro simplify [& args]
   `(map simplify* '(~@args)))
-
