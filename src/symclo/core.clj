@@ -30,7 +30,8 @@
    (= (first op) '-) :diffop
    (= (first op) '!) :factop
    (and (= (first op) '/) (= (count (rest op)) 2)) (let [[_ x y] op] (if (and (integer? x) (integer? y)) :fracop :quotop))
-   :else (throw (Throwable. (str op " is type: " (type op) "\n")))))
+   :else (throw (Throwable. (str op " is type: " (type op) "\n")))
+   ))
 
 ;;; The type of the number or operator?
 (defn- kind [u]
@@ -151,7 +152,8 @@
                              p (simplify-product (list s n))]
                          (if (integer? p) (simplify-integer-power (list op r p))
                              (list op r p)))
-   (= (kind v) :prodop) (simplify-product (map-indexed #(if (= % 0) (simplify-integer-power (list op %2 n))) v))
+   (= (kind v) :prodop) (simplify-product (filter #(not (= nil %)) 
+                                                  (map-indexed #(if-not (= % 0) (simplify-integer-power (list op %2 n))) v)))
    :else (list op v n)))
 
 ;;; simplify-power
@@ -349,7 +351,6 @@
       (= y 1) (list x)
       (= (base x) (base y)) (let [s (simplify-sum (list (exponent x) (exponent y)))
                                   p (simplify-power (list '** (base x) s))]
-                              (prn "rec: " p)
                               (cond 
                                (= p 1) '()
                                (not (= p 1)) (list p)))
@@ -454,5 +455,4 @@
 
 (defmacro simplify [& args]
   `(map simplify* '(~@args)))
-
 
