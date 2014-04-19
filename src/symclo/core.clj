@@ -422,7 +422,7 @@
          (= (kind cv) :number) cv
          :else (throw (Throwable. (str "Wrong type: " cv))))
         ]
-     (simplify-rne (list '+ cu cv)))
+     [(simplify-rne (list '+ cu cv)) ou])
    (= (kind u) :prodop) 
    (let 
        [
@@ -433,7 +433,7 @@
          (= (kind cu) :number) cu
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
-     (simplify-rne (list '+ cu 1)))
+     [(simplify-rne (list '+ cu 1)) v])
    :else 
    (let 
        [
@@ -444,7 +444,7 @@
          (= (kind cu) :number) cu
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
-     (simplify-rne (list '+ cu 1)))))
+     [(simplify-rne (list '+ cu 1)) u])))
 
 ;;; simplify-sum-rec
 (defn- simplify-sum-rec [op]
@@ -466,11 +466,11 @@
       ;; Maybe this can be done in some better way?
       ;; In some other place?
       (can-do? x y)
-      (let [res (get-coefficients x y)
-            p (simplify-product (list res x))]
+      (let [[res sym] (get-coefficients x y)]
         (cond
-         (= p 0) '()
-         :else (list p)))
+         (= res 0) '()
+         (< res 0) (list (simplify-product (list res sym)))
+         :else (list res sym)))
       ;; lex-less-than is the ordering constraint for the cannoican normal form
       (algebra-compare y x) (list y x)
       :else (list x y))) 
