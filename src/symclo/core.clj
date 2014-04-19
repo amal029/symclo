@@ -203,7 +203,8 @@
          [:factop] x
          [:powop] (let [[_ b _] x] b)
          [:number] 'UNDEFINED
-         [:fracop] 'UNDEFINED))
+         [:fracop] 'UNDEFINED
+         [:function] x))
 
 (defn- exponent [x]
   (match [(kind x)]
@@ -213,7 +214,8 @@
          [:factop] 1
          [:powop] (let [[_ _ e] x] e)
          [:number] 'UNDEFINED
-         [:fracop] 'UNDEFINED))
+         [:fracop] 'UNDEFINED
+         [:function] 1))
 
 ;;; the lexicographical ordering
 ;;; used for canonicalization
@@ -345,7 +347,7 @@
 ;;; The recursive product simplification function
 (defn- simplify-product-rec [op]
   (cond
-   (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :prodop) (= (kind y) :prodop))))) 
+   (and (= (count op) 2) (let [[x y] op] (and (not (= (kind x) :prodop)) (not (= (kind y) :prodop))))) 
    (let [[x y] op]
      (cond
       (and (or (= (kind x) :number) (= (kind x) :fracop)) 
@@ -537,7 +539,8 @@
                       [:quotop] (simplify-quotient v)
                       [:diffop] (simplify-diff (rest v))
                       [:factop] (simplify-factorial v)
-                      [_] (simplify-function v)))))
+                      [:function] (simplify-function v)))))
 
 (defmacro simplify [& args]
   `(map simplify* '(~@args)))
+
