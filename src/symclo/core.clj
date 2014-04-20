@@ -34,7 +34,7 @@
    :else :function))
 
 ;;; The type of the number or operator?
-(defn- kind [u]
+(defn kind [u]
   (cond 
    (integer? u) :number
    (symbol? u) :symbol
@@ -138,7 +138,7 @@
          [:powop] (let [[_ x y] u] (evaluate-power (simplify-rne-rec x) (simplify-rne-rec y)))))
 
 ;;; The SIMPLIFY_RNE function
-(defn- simplify-rne [u]
+(defn simplify-rne [u]
   (let [v (simplify-rne-rec u)]
     (simplify-rational-number v)))
 
@@ -526,7 +526,7 @@
 
 
 ;;; The main automatic simplification function
-(defn- simplify* [u]
+(defn simplify* [u]
   (match [(kind u)]
          [:number] u
          [:symbol] u
