@@ -358,3 +358,7 @@
 ;;; All inverse of the above identities go below.
 
 
+;;; RESEARCH
+;;; Need to write a simplification algorithm, maybe hill climbing, or
+;;; something similar that can reduce the length in terms of monomials
+;;; in the trignometric expression.
