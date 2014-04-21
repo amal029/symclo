@@ -93,22 +93,22 @@
            (= (trig-kind v) :tan) 0)
           (try 
             (match [(vec (flatten oo))]
-                   [['* '** 6 -1 %pi]] (cond
+                   [['* '/ 1 6 %pi]] (cond
                                         (= (trig-kind v) :sin) '(/ 1 2)
-                                        (= (trig-kind v) :cos) (simp/simplify (/ (** 3 (/ 1 2)) 2))
-                                        (= (trig-kind v) :tan) (simp/simplify (/ (** 3 (/ 1 2)) 3))
+                                        (= (trig-kind v) :cos) (simp/simplify* '(/ (** 3 (/ 1 2)) 2))
+                                        (= (trig-kind v) :tan) (simp/simplify* '(/ (** 3 (/ 1 2)) 3))
                                         :else v)
-                   [['* '** 4 -1 %pi]] (cond
-                                        (= (trig-kind v) :sin) (simp/simplify (/ (** 2 (/ 1 2)) 2))
-                                        (= (trig-kind v) :cos) (simp/simplify (/ (** 2 (/ 1 2)) 2))
+                   [['* '/ 1 4 %pi]] (cond
+                                        (= (trig-kind v) :sin) (simp/simplify* '(/ (** 2 (/ 1 2)) 2))
+                                        (= (trig-kind v) :cos) (simp/simplify* '(/ (** 2 (/ 1 2)) 2))
                                         (= (trig-kind v) :tan) 1 
                                         :else v)
-                   [['* '** 3 -1 %pi]] (cond
-                                        (= (trig-kind v) :sin) (simp/simplify (/ (** 3 (/ 1 2)) 2))
+                   [['* '/ 1 3 %pi]] (cond
+                                        (= (trig-kind v) :sin) (simp/simplify* '(/ (** 3 (/ 1 2)) 2))
                                         (= (trig-kind v) :cos) '(/ 1 2)
-                                        (= (trig-kind v) :tan) (simp/simplify (** 3 (/ 1 2)))
+                                        (= (trig-kind v) :tan) (simp/simplify* '(** 3 (/ 1 2)))
                                         :else v)
-                   [['* '** 2 -1 %pi]] (cond
+                   [['* '/ 1 2 %pi]] (cond
                                         (= (trig-kind v) :sin) 1 
                                         (= (trig-kind v) :cos) 0
                                         :else v)

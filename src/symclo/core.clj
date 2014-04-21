@@ -177,7 +177,7 @@
 ;;; simplify-quotient
 ;;; This can only ever have two operand!
 (defn- simplify-quotient [[_ n d]]
-  (simplify-product (list n (list '** d -1))))
+  (simplify-product (list n (simplify-power (list '** d -1)))))
 
 ;;; simplify-factorial
 (defn- factorial [op]
@@ -471,8 +471,7 @@
       (let [[res sym] (get-coefficients x y)]
         (cond
          (= res 0) '()
-         (< res 0) (list (simplify-product (list res sym)))
-         :else (list res sym)))
+         :else (list (simplify-product (list res sym)))))
       ;; lex-less-than is the ordering constraint for the cannoican normal form
       (algebra-compare y x) (list y x)
       :else (list x y))) 
