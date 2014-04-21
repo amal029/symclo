@@ -31,6 +31,7 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 * '! factorial
 
 # Example REPL session
+``` clojure
 symclo.core> (simplify (* a b (** a (/ 1 2))))
 
 ((* (** a (/ 3 2)) b))
@@ -54,8 +55,10 @@ symclo.core> (simplify (** a (* -1 (! 5))))
 symclo.core> (simplify (/ a (! 5)))
 
 ((* (** 120 -1) a))
+```
 
 ### Do multiple expressions together
+``` clojure
 symclo.core> (simplify (/ (/ a b) a) (** (/ 1 x) -2))
 
 ((** b -1) (** x 2))
@@ -71,15 +74,17 @@ symclo.core> (simplify (+ (+ a b) (+ a b)) (+ (- a b) (- a b)))
 symclo.core> (simplify (+ (+ a b) (+ a b)) (+ a b a b))
 
 ((+ (* 2 a) (* 2 b)) (+ (* 2 a) (* 2 b)))
+```
 
 ### Check equality of two expressions
+``` clojure
 symclo.core> (= (simplify (+ a b a b)) (simplify (+ (+ a b) (+ a b))))
 
 true
-
+```
 ### Trignometric simplification 
 #### (currently manual -- you can still use it in style of theorem proving)
-
+``` clojure
 symclo.core> (simplify* `(~'+ ~(trig/tr5 '(** (sin x) 2)) (~'** (~'cos ~'x) 2)))
 
 1
@@ -87,6 +92,7 @@ symclo.core> (simplify* `(~'+ ~(trig/tr5 '(** (sin x) 2)) (~'** (~'cos ~'x) 2)))
 symclo.core> (simplify* `(~'+ ~(trig/tr11 '(cos (* 2 a))) ~(trig/tr5 '(** (sin a) 2))))
 
 (** (cos a) 2)
+```
 
 ### Check equality of two trignometric expressions
 ``` clojure
