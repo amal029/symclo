@@ -89,11 +89,13 @@ symclo.core> (simplify* `(~'+ ~(trig/tr11 '(cos (* 2 a))) ~(trig/tr5 '(** (sin a
 (** (cos a) 2)
 
 ### Check equality of two trignometric expressions
-`symclo.core> (= 
+``` clojure
+symclo.core> (= 
 	     (simplify* (trig/tr4 '(tan (/ %pi 3)))) 
 	     (simplify* (list '/ (trig/tr4 '(sin (/ %pi 3))) (trig/tr4 '(cos (/ %pi 3))))))
 
-true`
+true
+```
 
 ## License
 
