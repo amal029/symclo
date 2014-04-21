@@ -6,9 +6,11 @@ A Clojure library for computer algebra systems a la, MAPEL, MAXIMA, MATHEMATICA,
 
 Simplification of rational polynomials is working.
 
+Trignometric identities can be used to simplify equations manually
+
 # TODO
 
-Trigonometric simplification.
+Automatic trigonometric simplification algorithm
 
 Polynomial factorization
 
@@ -29,6 +31,12 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 * '- subtraction
 * '/ quotient or fraction
 * '! factorial
+* 'sin sine
+* 'cos cosine
+* 'tan tangent
+* 'sec secant
+* 'csc cosecant
+* %pi PI
 
 # Example REPL session
 ``` clojure
