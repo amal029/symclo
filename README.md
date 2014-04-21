@@ -76,7 +76,7 @@ symclo.core> (simplify (+ (+ a b) (+ a b)) (+ a b a b))
 ((+ (* 2 a) (* 2 b)) (+ (* 2 a) (* 2 b)))
 ```
 
-### Check equality of two expressions
+### Check equality of two algebraic expressions
 ``` clojure
 symclo.core> (= (simplify (+ a b a b)) (simplify (+ (+ a b) (+ a b))))
 
