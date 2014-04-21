@@ -38,7 +38,7 @@
   (cond 
    (integer? u) :number
    (symbol? u) :symbol
-   (and (not (integer? u)) (number? u)) (throw (Throwable. (str "fractions should only have integer numerators and denominators: " u)))
+   (number? u) (throw (Throwable. (str "fractions should only have integer numerators and denominators: " u)))
    :else (kind-op u)))
 
 (defn- simplify-rational-number [u]
