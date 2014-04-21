@@ -77,7 +77,8 @@ symclo.core> (= (simplify (+ a b a b)) (simplify (+ (+ a b) (+ a b))))
 
 true
 
-### Trignometric simplification (currently manual -- you can still use it in style of theorem proving)
+### Trignometric simplification 
+#### (currently manual -- you can still use it in style of theorem proving)
 
 symclo.core> (simplify* `(~'+ ~(trig/tr5 '(** (sin x) 2)) (~'** (~'cos ~'x) 2)))
 
@@ -88,7 +89,9 @@ symclo.core> (simplify* `(~'+ ~(trig/tr11 '(cos (* 2 a))) ~(trig/tr5 '(** (sin a
 (** (cos a) 2)
 
 ### Check equality of two trignometric expressions
-symclo.core> (= (simplify* (trig/tr4 '(tan (/ %pi 3)))) (simplify* (list '/ (trig/tr4 '(sin (/ %pi 3))) (trig/tr4 '(cos (/ %pi 3))))))
+symclo.core> (= 
+	     (simplify* (trig/tr4 '(tan (/ %pi 3)))) 
+	     (simplify* (list '/ (trig/tr4 '(sin (/ %pi 3))) (trig/tr4 '(cos (/ %pi 3))))))
 
 true
 
