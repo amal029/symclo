@@ -3,6 +3,7 @@
 (use '[clojure.core.match :only (match)])
 (use 'clojure.math.numeric-tower)
 (use 'clojure.tools.trace)
+;; (require '[symclo.util :as util])
 
 ;;; forward declarations for mutually recursive functions
 (declare simplify-power)
@@ -179,11 +180,12 @@
 (defn- simplify-quotient [[_ n d]]
   (simplify-product (list n (simplify-power (list '** d -1)))))
 
-;;; simplify-factorial
-(defn- factorial [op]
-  (cond
-   (= op 1) op
-   :else (* op (factorial (- op 1)))))
+(defn factorial
+  ([n]                    ; when only one argument is passed in
+     (factorial n 1))
+  ([n acc]                ; when two arguments are passed in
+     (if  (= n 0)  acc
+          (recur (dec n) (* acc n)))))
 
 (defn- simplify-factorial [[_ op]]
    (if (integer? op) (factorial (biginteger op)) (list '! op)))
@@ -195,7 +197,7 @@
   u)
 
 ;;; the base
-(defn- base [x]
+(defn base [x]
   (match [(kind x)]
          [:symbol] x
          [:prodop] x
@@ -206,7 +208,7 @@
          [:fracop] 'UNDEFINED
          [:function] x))
 
-(defn- exponent [x]
+(defn exponent [x]
   (match [(kind x)]
          [:symbol] 1
          [:prodop] 1
