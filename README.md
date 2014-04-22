@@ -22,7 +22,8 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 
 ## Usage
 
-(simplify (expr)*)
+* (simplify (expr)*): simplify expression
+* (expand (expr)*): expand expression
 
 # Operators:
 * '* multiply
@@ -90,6 +91,32 @@ symclo.core> (= (simplify (+ a b a b)) (simplify (+ (+ a b) (+ a b))))
 
 true
 ```
+
+### Expand expressions
+
+``` clojure
+symclo.core> (expand/expand (* (- x y) (+ x y)))
+
+((+ (+ (+ (** x 2) (* (* -1 x) y)) (* x y)) (* -1 (** y 2))))
+
+
+symclo.core> (expand/expand (** (- x y) 2))
+
+((+ (+ (** x 2) (* (* -2 x) y)) (** y 2)))
+
+
+symclo.core> (expand/expand (** (+ x y) 3))
+
+((+ (+ (+ (* (* 3 x) (** y 2)) (** x 3)) (* (* 3 (** x 2)) y)) (** y 3)))
+
+```
+
+### Check equality of two expanded algebraic expressions
+``` clojure
+symclo.core> (= (expand/expand (** (+ x y) 2)) (expand/expand (* (+ x y) (+ x y))))
+true
+```
+
 ### Trignometric simplification 
 #### (currently manual -- you can still use it in style of theorem proving)
 ``` clojure
@@ -113,7 +140,7 @@ true
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
