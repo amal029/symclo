@@ -15,6 +15,7 @@
 (declare simplify-diff)
 (declare simplify-product-rec)
 (declare simplify-sum-rec)
+(declare get-prod-operands)
 
 ;;; Euclid's gcd algorithm
 (defn- integer_gcd 
