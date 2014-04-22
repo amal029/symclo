@@ -328,8 +328,9 @@
             (= (count h) 0) (merge-products (rest p) (rest q))
             (= (count h) 1) (list* (first h) (merge-products (rest p) (rest q)))
             (= (count h) 2) (cond
-                             (= (first h) p1) (list* p1 (merge-products (rest p) q))
-                             (= (first h) q1) (list* q1 (merge-products p (rest q))))))))
+                              (= (first h) p1) (list* p1 (merge-products (rest p) q))
+                              (= (first h) q1) (list* q1 (merge-products p (rest q))))
+            :else (throw (Throwable. (str "Merging products: don't know how to combine more than 2 element list:" h)))))))
 
 ;;; merge-sums
 (defn- merge-sums [p q] 
@@ -343,8 +344,9 @@
             (= (count h) 0) (merge-sums (rest p) (rest q))
             (= (count h) 1) (list* (first h) (merge-sums (rest p) (rest q)))
             (= (count h) 2) (cond
-                             (= (first h) p1) (list* p1 (merge-sums (rest p) q))
-                             (= (first h) q1) (list* q1 (merge-sums p (rest q))))))))
+                              (= (first h) p1) (list* p1 (merge-sums (rest p) q))
+                              (= (first h) q1) (list* q1 (merge-sums p (rest q))))
+            :else (throw (Throwable. (str "Merging sums: don't know how to combine more than 2 element list:" h)))))))
 
 ;;; The recursive product simplification function
 (defn- simplify-product-rec [op]
@@ -370,12 +372,12 @@
    (and (= (count op) 2) (let [[x y] op] (or (= (kind x) :prodop) (= (kind y) :prodop))))
    (let [[x y] op]
      (cond
-      (and (= (kind x) :prodop) (= (kind y) :prodop)) (merge-products (rest x) (rest y))
-      (= (kind x) :prodop) (merge-products (rest x) (list y))
-      (= (kind y) :prodop) (merge-products (list x) (rest y))))
+      (and (= (kind x) :prodop) (= (kind y) :prodop)) (merge-products (get-prod-operands (rest x)) (get-prod-operands (rest y)))
+      (= (kind x) :prodop) (merge-products (get-prod-operands (rest x)) (list y))
+      (= (kind y) :prodop) (merge-products (list x) (get-prod-operands (rest y)))))
    (> (count op) 2) (let [w (simplify-product-rec (rest op))] 
                       (cond
-                       (= (kind (first op)) :prodop) (merge-products (rest (first op)) w)
+                       (= (kind (first op)) :prodop) (merge-products (get-prod-operands (rest (first op))) w)
                        :else (merge-products (list (first op)) w)))))
 
 (defn- can-do? [u v]
@@ -450,44 +452,59 @@
         ]
      [(simplify-rne (list '+ cu 1)) u])))
 
+;;; get all operands
+(defn- get-sum-operands [x]
+  (let 
+      [sos (filter #(= (kind %) :sumop) x)
+       oos (filter #(not (= (kind %) :sumop)) x)]
+    (concat oos (if-not (empty? sos) (apply #(get-sum-operands (rest %)) sos)))))
+
+;;; get all operands
+(defn- get-prod-operands [x]
+  (let 
+      [sos (filter #(= (kind %) :prodop) x)
+       oos (filter #(not (= (kind %) :prodop)) x)]
+    (concat oos (if-not (empty? sos) (apply #(get-prod-operands (rest %)) sos)))))
+
 ;;; simplify-sum-rec
 (defn- simplify-sum-rec [op]
-  (cond
-   (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :sumop) (= (kind y) :sumop))))) 
-   (let [[x y] op]
-     (cond
-      (and (or (= (kind x) :number) (= (kind x) :fracop)) 
-           (or (= (kind y) :number) (= (kind y) :fracop)))
-      (let [p (simplify-rne (list '+ x y))]
-        (if (= p 0) '() (list p)))
-      (= x 0) (list y)
-      (= y 0) (list x)
-      (and (= (base x) (base y)) (= (exponent x) (exponent y))) 
-      (let [p (simplify-product (list 2 x))]
-        (cond
-         (= p 0) '()
-         :else (list p)))
-      ;; Maybe this can be done in some better way?
-      ;; In some other place?
-      (can-do? x y)
-      (let [[res sym] (get-coefficients x y)]
-        (cond
-         (= res 0) '()
-         :else (list (simplify-product (list res sym)))))
-      ;; lex-less-than is the ordering constraint for the cannoican normal form
-      (algebra-compare y x) (list y x)
-      :else (list x y))) 
-   ;; This is the else part and SPRDEC-2
-   (and (= (count op) 2) (let [[x y] op] (or (= (kind x) :sumop) (= (kind y) :sumop))))
-   (let [[x y] op]
-     (cond
-      (and (= (kind x) :sumop) (= (kind y) :sumop)) (merge-sums (rest x) (rest y))
-      (= (kind x) :sumop) (merge-sums (rest x) (list y))
-      (= (kind y) :sumop) (merge-sums (list x) (rest y))))
-   (> (count op) 2) (let [w (simplify-sum-rec (rest op))] 
-                      (cond
-                       (= (kind (first op)) :sumop) (merge-sums (rest (first op)) w)
-                       :else (merge-sums (list (first op)) w)))))
+  (do 
+    (cond
+     (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :sumop) (= (kind y) :sumop))))) 
+     (let [[x y] op]
+       (cond
+        (and (or (= (kind x) :number) (= (kind x) :fracop)) 
+             (or (= (kind y) :number) (= (kind y) :fracop)))
+        (let [p (simplify-rne (list '+ x y))]
+          (if (= p 0) '() (list p)))
+        (= x 0) (list y)
+        (= y 0) (list x)
+        (and (= (base x) (base y)) (= (exponent x) (exponent y))) 
+        (let [p (simplify-product (list 2 x))]
+          (cond
+           (= p 0) '()
+           :else (list p)))
+        ;; Maybe this can be done in some better way?
+        ;; In some other place?
+        (can-do? x y)
+        (let [[res sym] (get-coefficients x y)]
+          (cond
+           (= res 0) '()
+           :else (list (simplify-product (list res sym)))))
+        ;; lex-less-than is the ordering constraint for the cannoican normal form
+        (algebra-compare y x) (list y x)
+        :else (list x y))) 
+     ;; This is the else part and SPRDEC-2
+     (and (= (count op) 2) (let [[x y] op] (or (= (kind x) :sumop) (= (kind y) :sumop))))
+     (let [[x y] op]
+       (cond
+        (and (= (kind x) :sumop) (= (kind y) :sumop)) (merge-sums (get-sum-operands (rest x)) (get-sum-operands (rest y)))
+        (= (kind x) :sumop) (merge-sums (get-sum-operands (rest x)) (list y))
+        (= (kind y) :sumop) (merge-sums (list x) (get-sum-operands (rest y)))))
+     (> (count op) 2) (let [w (simplify-sum-rec (rest op))] 
+                        (cond
+                         (= (kind (first op)) :sumop) (merge-sums (get-sum-operands (rest (first op))) w)
+                         :else (merge-sums (list (first op)) w))))))
 
 ;;; simplify-product
 (defn- simplify-product [u]
@@ -498,7 +515,7 @@
    :else (let [v (simplify-product-rec u)]
            (cond
             (= (count v) 1) (first v)
-            (= (count v) 0) 1 ;BUG (FIXME). Sometimes this comes out!!
+            (= (count v) 0) 1
             :else (cond 
                    (or (= (kind (first v)) :number)(= (kind (first v)) :fracop))
                    (let [
