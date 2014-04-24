@@ -10,6 +10,8 @@
 (declare expand-power)
 (declare expand*)
 
+(defn- third [x] (first (nnext x)))
+
 ;;; Distributes multiplication over sums
 (defn expand* [u]
   (cond
@@ -54,6 +56,13 @@
        (list '** u n))
      :else (list '** u n))
     (list '** u n)))
+
+(defn expand-main-op [u]
+  (cond
+   (= (simp/kind u) :sumop) u
+   (= (simp/kind u) :prodop) (expand-product (second u) (third u))
+   (= (simp/kind u) :powop) (expand-power (second u) (third u))
+   :else u))
 
 (defmacro expand [& args]
   `(map (comp simp/simplify* expand* simp/simplify*) '(~@args)))

@@ -14,6 +14,10 @@
 (require '[symclo.expand :as expand])
 (require '[symclo.rationalize :as natural])
 
+(declare contract-trig-rules)
+(declare contract-trig-product)
+(declare contract-trig-power)
+
 (defn- third [x] (first (nnext x)))
 
 (defn trig-kind [op]
@@ -183,19 +187,6 @@
                               (simp/simplify* (list '/ (list '- (list 'cos f) (list 'cos s)) (list '* -1 2))))
               [_] op))
      op)
-   (= (simp/kind (simp/simplify* op)) :powop)
-   (let [[_ x y] (simp/simplify* op)]
-     (if (= y 2)
-       (match [(trig-kind x)]
-              [:cos] (let [[_ x] x
-                           f (list '+ x x)
-                           s (list '- x x)]
-                       (simp/simplify* (list '/ (list '+ 1 (list 'cos f)) 2)))
-              [:sin] (let [[_ x] x
-                           f (list '+ x x)]
-                       (simp/simplify* (list '/ (list '- (list 'cos f) 1) (list '* -1 2))))
-              [_] op)
-       op))
    :else op))
 
 ;;; converting sum or diff to product
@@ -404,10 +395,77 @@
             (= (trig-kind v) :cos) (fnext (expand-trig-rules (fnext v)))
             :else v))))
 
+;;; FIXME: this can be made quicker with sets rather that lists.
+(defn- separate-sin-cos [u]
+  (cond
+   (= (simp/kind u) :prodop)
+   (let [s (filter #(cond
+                     (or (= (trig-kind %) :cos) (= (trig-kind %) :sin)) true
+                     (= (simp/kind %) :powop) 
+                     (cond
+                      (or (= (second %) :cos) (= (second %) :sin)) (and (integer? (third %)) (> (third %) 0))
+                      :else false)
+                     :else false) (simp/get-prod-operands u))
+         s (if-not (empty? s) (simp/simplify* (reduce #(list '* % %2) s)) 1)
+         r (filter #(cond
+                     (or (= (trig-kind %) :cos) (= (trig-kind %) :sin)) false
+                     (= (simp/kind %) :powop)
+                     (cond
+                      (or (= (second %) :cos) (= (second %) :sin)) (not (and (integer? (third %)) (> (third %) 0)))
+                      :else true)
+                     :else true) (simp/get-prod-operands u))
+         r (if-not (empty? r) (simp/simplify* (reduce #(list '* % %2) r)) 1)
+         ] [r s])
+   (= (simp/kind u) :powop) 
+   (cond
+    (or (= (second u) :cos) (= (second u) :sin))
+    (if (and (integer? (third u)) (> (third u) 0)) [1 u] [u 1])
+    :else [u 1])
+   (or (= (trig-kind u) :cos) (= (trig-kind u) :sin)) [1 u]
+   :else [u 1]))
 
-;;; TODO: fill in these functions
+(defn- contract-trig-product [u]
+  (if (= (count u) 3)
+    ;; then
+    (cond
+     (= (simp/kind (second u)) :powop)
+     (contract-trig-rules (list '* (contract-trig-power (second u)) (third u)))
+     (= (simp/kind (third u)) :powop)
+     (contract-trig-rules (list '* (second u) (contract-trig-power (third u))))
+     :else (tr8 u))
+    ;; else
+    (throw (Throwable. (str "contract-trig-product: more than 2 operands: " u)))))
+
+;;; FIXME: The power operation can be done using binomial algorithms to
+;;; avoid excessive recursion
+(defn- contract-trig-power [v]
+  (contract-trig-product (reduce #(list '* % %2) (repeat (third v) (second v)))))
+
+(defn- contract-trig-rules [u]
+  (let [v (expand/expand-main-op u)]
+    (cond
+     (= (simp/kind v) :powop) (contract-trig-power v)
+     (= (simp/kind v) :prodop)
+     (let [[c d] (separate-sin-cos v)]
+       (cond 
+        (= d 1) v
+        (or (= (trig-kind d) :sin) (= (trig-kind d) :cos)) v
+        (= (simp/kind d) :powop) (simp/simplify* (expand/expand-main-op (list '* c (contract-trig-power d))))
+        :else (simp/simplify* (expand/expand-main-op (list '* c (contract-trig-product d))))))
+     (= (simp/kind v) :sumop)
+     (simp/simplify* (reduce #(if (or (= (simp/kind %2) :prodop) (= (simp/kind %2) :powop))
+                                (list '+ % (contract-trig-rules %2))
+                                (list '+ % %2)) 0 (rest v)))
+     :else v)))
+
 (defn- contract-trig [u]
-  )
+  (cond
+   (or (= (simp/kind u) :symbol) (= (simp/kind u) :fracop) (= (simp/kind u) :number))
+   u
+   :else (let [v (map-indexed #(if-not (= % 0) (contract-trig %2) %2))]
+           (if (or (= (simp/kind v) :sumop)(= (simp/kind v) :prodop))
+             (contract-trig-rules v)
+             v))))
 
 
 (defn simplify-trig-operands [u]
@@ -417,12 +475,28 @@
 
 (defn expand-trig-operands [u]
   (cond
-   (= (trig-kind u) :other) (expand/expand* u)
+   (= (trig-kind u) :other) (simp/simplify* (expand/expand* u))
    :else (list (first u) (expand-trig-operands (fnext u)))))
+
+(defn apply-induced-identities [u]
+  (cond
+   (= (trig-kind u) :other) (list (first u) (apply-induced-identities (second u)) (apply-induced-identities (third u)))
+   :else (tr3 u)))
+
+(defn apply-special-identities [u]
+  (cond
+   (= (trig-kind u) :other) (list (first u) (apply-special-identities (second u)) (apply-special-identities (third u)))
+   :else (tr4 u)))
 
 (defn trig-simplify* [u]
   (let [
         u (simplify-trig-operands u)
+        ;; expand the operands recursively
+        u (expand-trig-operands u)
+        ;; apply induced identities
+        u (comp simp/simplify* apply-induced-identities u)
+        ;; apply special angles
+        u (comp simp/simplify* apply-special-identities u)
         w (rationalize-expression (trig-substitute u))
         n (contract-trig (expand-trig (natural/numer w)))
         d (contract-trig (expand-trig (natural/denom w)))]

@@ -460,7 +460,7 @@
     (concat oos (if-not (empty? sos) (apply #(get-sum-operands (rest %)) sos)))))
 
 ;;; get all operands
-(defn- get-prod-operands [x]
+(defn get-prod-operands [x]
   (let 
       [sos (filter #(= (kind %) :prodop) x)
        oos (filter #(not (= (kind %) :prodop)) x)]
