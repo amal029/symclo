@@ -416,7 +416,7 @@
                      :else true) (simp/get-prod-operands u))
          r (if-not (empty? r) (simp/simplify* (reduce #(list '* % %2) r)) 1)
          ] [r s])
-   (= (simp/kind u) :powop) 
+   (= (simp/kind u) :powop)
    (cond
     (or (= (second u) :cos) (= (second u) :sin))
     (if (and (integer? (third u)) (> (third u) 0)) [1 u] [u 1])
@@ -497,7 +497,7 @@
         u (comp simp/simplify* apply-induced-identities u)
         ;; apply special angles
         u (comp simp/simplify* apply-special-identities u)
-        w (rationalize-expression (trig-substitute u))
+        w (simp/simplify* (natural/natural* (trig-substitute u)))
         n (contract-trig (expand-trig (natural/numer w)))
         d (contract-trig (expand-trig (natural/denom w)))]
     (if (= d 0) 'UNDEFINED (list '* (list '** n -1) d))))
