@@ -58,14 +58,14 @@
   (match [(kind x)]
          [:number] x
          [:fracop] (let [[_ n _] x] n)
-         [_] (throw (Throwable. (str "numerator-function: only integers and fractions have numberator: " x)))))
+         [_] (throw (Throwable. (str "numerator-function: only integers and fractions have numerator: " x)))))
 
 ;;; denominator function
 (defn- denominator-function [x]
   (match [(kind x)]
          [:number] 1
          [:fracop] (let [[_ _ d] x] d)
-         [_] (throw (Throwable. (str "numerator-function: only integers and fractions have numerators: " x)))))
+         [_] (throw (Throwable. (str "denominator-function: only integers and fractions have numerators: " x)))))
 
 ;;; All evaluation functions use arbitary precision arithmetic
 
@@ -110,7 +110,6 @@
            (cond
             (> n 0) (evaluate-product (evaluate-power v (- n 1)) v)
             (= n 0) 1
-            ;; this seems wrong!
             (= n -1) (evaluate-quotient 1 v)
             (< n -1) (evaluate-power (evaluate-quotient 1 v) (*' -1 n)))
            ;; This is the else part

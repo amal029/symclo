@@ -23,7 +23,7 @@
    (let [b (simp/base u)
          e (simp/exponent u)]
      (if (= (simp/kind e) :number)
-       (when (>= e 2) (expand-power (expand* b) e))
+       (if (>= e 2) (expand-power (expand* b) e) u)
        u))
    :else u))
 

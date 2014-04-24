@@ -57,10 +57,10 @@
    :else false))
 
 
-(defn factorial
-  ([n]                    ; when only one argument is passed in
-     (factorial n 1))
-  ([n acc]                ; when two arguments are passed in
-     (if  (= n 0)  acc
-          (recur (dec n) (* acc n)))))
+(defn complete-sub-expression [u]
+  (cond
+   (or (= (simp/kind u) :fracop) (= (simp/kind u) :symbol) (= (simp/kind u) :number)) 
+   (list u)
+   :else
+   (reduce #(into (complete-sub-expression %2) %) (list u) (rest u))))
 

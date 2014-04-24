@@ -11,6 +11,10 @@
 (use 'clojure.tools.trace)
 (require '[symclo.core :as simp])
 (require '[symclo.util :as util])
+(require '[symclo.expand :as expand])
+(require '[symclo.rationalize :as natural])
+
+(defn- third [x] (first (nnext x)))
 
 (defn trig-kind [op]
   (if (seq? op)
@@ -359,3 +363,70 @@
 
 
 ;;; Joel S. Cohen Elementrary CAS trig simplification
+
+(defn- trig-substitute [op]
+  (cond
+   (or (=(simp/kind op) :number)
+       (=(simp/kind op) :fracop)
+       (=(simp/kind op) :symbol))
+   op
+   :else (let [u (map-indexed #(if-not (= % 0) (trig-substitute %) %))]
+            (cond
+             (or (= (trig-kind u) :cot) (= (trig-kind u) :tan)) (tr2 u)  
+             (or (= (trig-kind u) :sec) (= (trig-kind u) :csc)) (tr1 u)))))
+
+
+;;; FIXME: A different algorithm for integer multiple angles can be
+;;; used.
+(defn- expand-trig-rules [A]
+  (cond
+   (= (simp/kind A) :sumop)  
+   (let [f (expand-trig-rules (second A))
+         r (expand-trig-rules (third A))
+         s (list '+ (list '* (first f) (second r)) (list '* (second f) (first r)))
+         c (list '- (list '* (second f) (second r)) (list '* (first f) (first r)))
+         ] [(simp/simplify* s) (simp/simplify* c)])
+   (= (simp/kind A) :prodop) (if (integer? (second A))
+                               ;; then
+                               (let [A (reduce #(list '+ % %2) (repeat (second A) (third A)))]
+                                 (map (comp simp/simplify* expand/expand*) ((comp expand-trig-rules simp/simplify*) A)))
+                               ;; else
+                               [(list 'sin A) (list 'cos A)])
+   :else [(list 'sin A) (list 'cos A)]))
+
+(defn- expand-trig [u]
+  (cond
+   (or (= (simp/kind u) :number) (= (simp/kind u) :fracop) (= (simp/kind u) :symbol)) 
+   u
+   :else (let [v (map-indexed #(if-not (= % 0) (expand-trig %) %) u)]
+           (cond
+            (= (trig-kind v) :sin) (first (expand-trig-rules (fnext v)))
+            (= (trig-kind v) :cos) (fnext (expand-trig-rules (fnext v)))
+            :else v))))
+
+
+;;; TODO: fill in these functions
+(defn- contract-trig [u]
+  )
+
+
+(defn simplify-trig-operands [u]
+  (cond
+   (= (trig-kind u) :other) (simp/simplify* u)
+   :else (list (first u) (simplify-trig-operands (fnext u)))))
+
+(defn expand-trig-operands [u]
+  (cond
+   (= (trig-kind u) :other) (expand/expand* u)
+   :else (list (first u) (expand-trig-operands (fnext u)))))
+
+(defn trig-simplify* [u]
+  (let [
+        u (simplify-trig-operands u)
+        w (rationalize-expression (trig-substitute u))
+        n (contract-trig (expand-trig (natural/numer w)))
+        d (contract-trig (expand-trig (natural/denom w)))]
+    (if (= d 0) 'UNDEFINED (list '* (list '** n -1) d))))
+
+(defmacro trig-simplify [& args]
+  `(map (comp simp/simplify* trig-simplify* simp/simplify*) '(~@args)))
