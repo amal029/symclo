@@ -117,8 +117,29 @@ symclo.core> (= (expand/expand (** (+ x y) 2)) (expand/expand (* (+ x y) (+ x y)
 true
 ```
 
+#### Automatic simplification of trignometric expressions
+``` clojure
+symclo.core> (trig/trig-simplify (+ (** (sin x) 2) (** (cos x) 2)))
+(1)
+
+symclo.core> (trig/trig-simplify (** (tan (/ %pi 3)) 4))
+
+(9)
+
+
+symclo.core>  (trig/trig-simplify (+ (** (tan (/ %pi 3)) 3) (** (sin (/ %pi 3)) 3)))
+
+((* (/ 9 8) (** 3 (/ 3 2))))
+
+symclo.core>  (trig/trig-simplify (+ (** (tan x) 3) (** (cot x) 3)))
+
+((* (+ (+ (+ (* (* (* (** (sin x) 2) (sin (* 3 x))) (/ -1 4)) (sin x)) (* (* (* (** (cos x) 2) (cos (* 3 x))) (/ 1 4)) (cos x))) (* (/ 3 4) (** (cos x) 4))) (* (/ 3 4) (** (sin x) 4))) (** (+ (+ (+ (+ (+ (+ (+ (+ (* (* (/ 1 4) (cos x)) (sin x)) (* (* (/ -1 16) (cos x)) (sin (* 3 x)))) (* (* (/ 1 8) (cos x)) (sin x))) (* (* (/ 1 8) (cos (* 3 x))) (sin x))) (* (* (/ 1 8) (cos x)) (sin x))) (* (* (/ 1 16) (cos (* 3 x))) (sin x))) (* (* (/ -1 8) (cos x)) (sin (* 3 x)))) (* (* (/ 1 16) (cos x)) (sin x))) (* (* (/ -1 16) (cos (* 3 x))) (sin (* 3 x)))) -1)))
+
+```
+
+
 ### Trignometric simplification 
-#### (currently manual -- you can still use it in style of theorem proving)
+#### (Manual -- use it in style of theorem proving)
 ``` clojure
 symclo.core> (simplify* `(~'+ ~(trig/tr5 '(** (sin x) 2)) (~'** (~'cos ~'x) 2)))
 
@@ -129,13 +150,19 @@ symclo.core> (simplify* `(~'+ ~(trig/tr11 '(cos (* 2 a))) ~(trig/tr5 '(** (sin a
 (** (cos a) 2)
 ```
 
-### Check equality of two trignometric expressions
+### Check equality of two trignometric expressions (manually or automatically)
 ``` clojure
 symclo.core> (= 
 	     (simplify* (trig/tr4 '(tan (/ %pi 3)))) 
 	     (simplify* (list '/ (trig/tr4 '(sin (/ %pi 3))) (trig/tr4 '(cos (/ %pi 3))))))
 
 true
+
+
+symclo.core> (= (trig/trig-simplify (/ (sin (* 4 a)) (cos (* 4 a)))) (trig/trig-simplify (tan (* 4 a))))
+
+true
+
 ```
 
 ## License

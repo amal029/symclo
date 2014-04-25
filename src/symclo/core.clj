@@ -461,7 +461,7 @@
 
 
 (defn tutu [u]
-  (do (prn (count (rest u))) 
+  (do 
       (get-prod-operands (rest u))))
 
 ;;; get all operands

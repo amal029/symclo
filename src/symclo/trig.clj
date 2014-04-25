@@ -398,6 +398,7 @@
             :else v))))
 
 ;;; FIXME: this can be made quicker with sets rather that lists.
+;;; This function is very sucky!!
 (defn separate-sin-cos [u]
   ;; There is a problem in get-prod-operands when there are multiple or single 
   (cond
@@ -408,7 +409,7 @@
                      (cond
                       (or (= (trig-kind (second %)) :cos) (= (trig-kind (second %)) :sin)) (and (integer? (third %)) (> (third %) 0))
                       :else false)
-                     :else false) (do (prn u) (simp/get-prod-operands (rest u))))
+                     :else false) (do (simp/get-prod-operands (rest u))))
          s (if-not (empty? s) (reduce #(list '* % %2) s) 1)
          r (filter #(cond
                      (or (= (trig-kind %) :cos) (= (trig-kind %) :sin)) false
@@ -416,7 +417,7 @@
                      (cond
                       (or (= (trig-kind (second %)) :cos) (= (trig-kind (second %)) :sin)) (not (and (integer? (third %)) (> (third %) 0)))
                       :else true)
-                     :else true) (do (prn u) (simp/get-prod-operands (rest u))))
+                     :else true) (do (simp/get-prod-operands (rest u))))
          r (if-not (empty? r) (reduce #(list '* % %2) 1 r) 1)
          ] [r s])
    (= (simp/kind u) :powop)
@@ -427,7 +428,7 @@
    (or (= (trig-kind u) :cos) (= (trig-kind u) :sin)) [1 u]
    :else [u 1]))
 
-(deftrace contract-trig-product [u]
+(defn contract-trig-product [u]
   (do 
     (if (= (count u) 3)
       ;; then
@@ -444,7 +445,7 @@
 
 ;;; FIXME: The power operation can be done using binomial algorithms to
 ;;; avoid excessive recursion
-(deftrace contract-trig-power [v]
+(defn contract-trig-power [v]
   (if (or (= (simp/kind (second v)) :fracop) (= (simp/kind (second v)) :number) (= (simp/kind (second v)) :symbol))
     v
     (contract-trig-rules (reduce #(list '* % %2) (repeat (third v) (second v))))))
@@ -455,8 +456,8 @@
      (= (simp/kind v) :powop) (contract-trig-power v)
      (= (simp/kind v) :prodop)
      (let [[c d] (separate-sin-cos v)]
-       (prn "c:" c)
-       (prn "d:" d)
+       ;; (prn "c:" c)
+       ;; (prn "d:" d)
        (cond 
         (= d 1) v
         (or (= (trig-kind d) :sin) (= (trig-kind d) :cos)) v
@@ -508,42 +509,42 @@
   (let [
         u (simplify-trig-operands u)
         ;; expand the operands recursively
-        _ (prn "u1:" u)
+        ;; _ (prn "u1:" u)
         u (expand-trig-operands u)
-        _ (prn "u2:" u)
+        ;; _ (prn "u2:" u)
         ;; apply induced identities
         u (simp/simplify* (apply-induced-identities u))
-        _ (prn "u3:" u)
+        ;; _ (prn "u3:" u)
         ;; apply special angles
         u ((comp simp/simplify* apply-special-identities) u)
-        _ (prn "u4:" u)
+        ;; _ (prn "u4:" u)
         u ((comp simp/simplify* trig-substitute) u)
-        _ (prn "u5:" u)
+        ;; _ (prn "u5:" u)
         u (natural/natural* u)
-        _ (prn "u6:" u)
+        ;; _ (prn "u6:" u)
         w (simp/simplify* u)
-        _ (prn "w:" w)
+        ;; _ (prn "w:" w)
         n (expand-trig (natural/numer w))
-        _ (prn "expand n:" n)
+        ;; _ (prn "expand n:" n)
         n (contract-trig n)
-        _ (prn "contract n:" n)
+        ;; _ (prn "contract n:" n)
         n (apply-special-identities n)
-        _ (prn "n:" n)
+        ;; _ (prn "n:" n)
         n (apply-induced-identities n)
-        _ (prn "n:" n)
+        ;; _ (prn "n:" n)
         n (simp/simplify* n)
-        _ (prn "n:" n)
+        ;; _ (prn "n:" n)
         d (expand-trig (natural/denom w))
-        _ (prn "expand d:" d)
+        ;; _ (prn "expand d:" d)
         d (contract-trig d)
-        _ (prn "contract d:" d)
+        ;; _ (prn "contract d:" d)
         ;; d (simp/simplify* (apply-induced-identities (apply-special-identities (contract-trig (expand-trig (natural/denom w))))))
         d (apply-special-identities d)
-        _ (prn "d:" d)
+        ;; _ (prn "d:" d)
         d (apply-induced-identities d)
-        _ (prn "d:" d)
+        ;; _ (prn "d:" d)
         d (simp/simplify* d)
-        _ (prn "d:" d)
+        ;; _ (prn "d:" d)
         ]
     (if (= d 0) 'UNDEFINED (simp/simplify* (list '* (list '** d -1) n)))))
 
