@@ -4,9 +4,13 @@ A Clojure library for computer algebra systems a la, MAPEL, MAXIMA, MATHEMATICA,
 
 ## Current status
 
-Simplification of rational polynomials is working.
+Simplification of rational polynomials
 
-Trignometric identities can be used to simplify equations manually
+Simplification of trignometric identities
+
+Expansion of polynomials with rational coefficients
+
+Rationalization of polynomials with rational coefficients
 
 # TODO
 
@@ -168,6 +172,28 @@ true
 symclo.core> (= (trig/trig-simplify (/ (sin (* 4 a)) (cos (* 4 a)))) (trig/trig-simplify (tan (* 4 a))))
 
 true
+
+```
+#### Rationalization of polynomials
+
+``` clojure
+
+symclo.core>  (natural/natural (+ (/ 1 x) (/ 1 y)))
+
+((* (* (** x -1) (** y -1)) (+ x y)))
+
+
+symclo.core> (def a (natural/natural* '(+ (/ 1 x) (/ 1 y))))
+
+\#'symclo.core/a
+
+symclo.core> (simplify* (natural/denom a))
+
+(* x y)
+
+symclo.core> (simplify* (natural/numer a))
+
+(+ x y)
 
 ```
 

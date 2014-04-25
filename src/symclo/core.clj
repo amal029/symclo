@@ -452,20 +452,21 @@
         ]
      [(simplify-rne (list '+ cu 1)) u])))
 
-;;; get all operands
-(defn- get-sum-operands [x]
+
+(defn tutu1 [u & us]
+  (get-sum-operands (rest (concat u us))))
+
+;;; get all + operands
+(defn get-sum-operands [x]
   (let 
       [sos (filter #(= (kind %) :sumop) x)
        oos (filter #(not (= (kind %) :sumop)) x)]
-    (concat oos (if-not (empty? sos) (apply #(get-sum-operands (rest %)) sos)))))
+    (concat oos (if-not (empty? sos) (apply tutu1 sos)))))
 
+(defn tutu [u & us]
+  (get-prod-operands (rest (concat u us))))
 
-(defn tutu [u]
-  (do 
-      (get-prod-operands (rest u))))
-
-;;; get all operands
-;;; This needs to be looked at
+;;; get all * operands
 (defn get-prod-operands [x]
   (let 
       [sos (filter #(= (kind %) :prodop) x)
