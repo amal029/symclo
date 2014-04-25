@@ -35,6 +35,7 @@ Polynomial differentiation (currently differentiation is available in Incanter)
 * 'sin sine
 * 'cos cosine
 * 'tan tangent
+* 'cot cotangent
 * 'sec secant
 * 'csc cosecant
 * %pi PI
