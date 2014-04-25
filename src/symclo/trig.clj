@@ -83,12 +83,12 @@
                                  (and (= (mod y 2) 0) (= (trig-kind v) :cot)) (list 'cot x)
                                  :else v)
              ;; -angle
-             [['* (a :guard [integer? less-than-zero?] ) x]] (cond 
-                          (= (trig-kind v) :sin) (list '* a (list 'sin x))
-                          (= (trig-kind v) :cos) (list (- a)'cos x)
-                          (= (trig-kind v) :tan) (list '* a (list 'tan x))
-                          (= (trig-kind v) :cot) (list '* a (list 'cot x))
-                          :else v)
+             [['* (a :guard [integer? less-than-zero?]) x]] (cond 
+                                                             (= (trig-kind v) :sin) (list '* a (list 'sin x))
+                                                             (= (trig-kind v) :cos) (list (- a)'cos x)
+                                                             (= (trig-kind v) :tan) (list '* a (list 'tan x))
+                                                             (= (trig-kind v) :cot) (list '* a (list 'cot x))
+                                                             :else v)
              [_] v)
       (catch Exception e v))))
 
