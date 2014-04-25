@@ -10,7 +10,7 @@ Trignometric identities can be used to simplify equations manually
 
 # TODO
 
-Automatic trigonometric simplification algorithm
+~~Automatic trigonometric simplification algorithm~~
 
 Polynomial factorization
 
