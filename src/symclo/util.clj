@@ -63,4 +63,3 @@
    (list u)
    :else
    (reduce #(into (complete-sub-expression %2) %) (list u) (rest u))))
-

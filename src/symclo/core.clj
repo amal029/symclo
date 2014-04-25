@@ -459,18 +459,20 @@
        oos (filter #(not (= (kind %) :sumop)) x)]
     (concat oos (if-not (empty? sos) (apply #(get-sum-operands (rest %)) sos)))))
 
+
+(defn tutu [u]
+  (do (prn (count (rest u))) 
+      (get-prod-operands (rest u))))
+
 ;;; get all operands
-(deftrace get-prod-operands [x]
+;;; This needs to be looked at
+(defn get-prod-operands [x]
   (let 
       [sos (filter #(= (kind %) :prodop) x)
-       oos (filter #(not (= (kind %) :prodop)) x)
-       _ (prn "sos:" sos)]
-    (concat oos (if-not (empty? sos) (apply #(do (prn (count (rest %))) 
-                                                 ;; (get-prod-operands (rest %))
-                                                 '()
-                                                 ) sos)))))
+       oos (filter #(not (= (kind %) :prodop)) x)]
+    (concat oos (if-not (empty? sos) (apply tutu sos)))))
 
-(get-prod-operands '((* (* (/ 1 2) (cos 0)) 1) (* 1 1)))
+;; (get-prod-operands '((* (* (/ 1 2) (cos 0)) 1) (* 1 1)))
 
 ;;; simplify-sum-rec
 (defn- simplify-sum-rec [op]

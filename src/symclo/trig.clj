@@ -37,14 +37,14 @@
 
 (defn tr1 [[_ oo :as v]]
   (match [(trig-kind v)]
-         [:sec] (simp/simplify* (list '/ 1 (list 'cos oo)))
-         [:csc] (simp/simplify* (list '/ 1 (list 'sin oo)))
+         [:sec] (list '/ 1 (list 'cos oo))
+         [:csc] (list '/ 1 (list 'sin oo))
          [_] v))
 
 (defn tr2 [[_ oo :as v]]
   (match [(trig-kind v)]
-         [:tan] (simp/simplify* (list '/ (list 'sin oo) (list 'cos oo)))
-         [:cot] (simp/simplify* (list '/ (list 'cos oo) (list 'sin oo)))
+         [:tan] (list '/ (list 'sin oo) (list 'cos oo))
+         [:cot] (list '/ (list 'cos oo) (list 'sin oo))
          [_] v))
 
 ;;; FIXME: we can make this stronger
@@ -398,7 +398,8 @@
             :else v))))
 
 ;;; FIXME: this can be made quicker with sets rather that lists.
-(deftrace separate-sin-cos [u]
+(defn separate-sin-cos [u]
+  ;; There is a problem in get-prod-operands when there are multiple or single 
   (cond
    (= (simp/kind u) :prodop)
    (let [s (filter #(cond
@@ -448,12 +449,14 @@
     v
     (contract-trig-rules (reduce #(list '* % %2) (repeat (third v) (second v))))))
 
-(deftrace contract-trig-rules [u]
+(defn contract-trig-rules [u]
   (let [v (expand/expand-main-op u)]
     (cond
      (= (simp/kind v) :powop) (contract-trig-power v)
      (= (simp/kind v) :prodop)
      (let [[c d] (separate-sin-cos v)]
+       (prn "c:" c)
+       (prn "d:" d)
        (cond 
         (= d 1) v
         (or (= (trig-kind d) :sin) (= (trig-kind d) :cos)) v
@@ -514,7 +517,11 @@
         ;; apply special angles
         u ((comp simp/simplify* apply-special-identities) u)
         _ (prn "u4:" u)
-        w (simp/simplify* (natural/natural* (trig-substitute u)))
+        u ((comp simp/simplify* trig-substitute) u)
+        _ (prn "u5:" u)
+        u (natural/natural* u)
+        _ (prn "u6:" u)
+        w (simp/simplify* u)
         _ (prn "w:" w)
         n (expand-trig (natural/numer w))
         _ (prn "expand n:" n)
@@ -526,12 +533,20 @@
         _ (prn "n:" n)
         n (simp/simplify* n)
         _ (prn "n:" n)
-        d (simp/simplify* (apply-induced-identities (apply-special-identities (contract-trig (expand-trig (natural/denom w))))))
+        d (expand-trig (natural/denom w))
+        _ (prn "expand d:" d)
+        d (contract-trig d)
+        _ (prn "contract d:" d)
+        ;; d (simp/simplify* (apply-induced-identities (apply-special-identities (contract-trig (expand-trig (natural/denom w))))))
+        d (apply-special-identities d)
+        _ (prn "d:" d)
+        d (apply-induced-identities d)
+        _ (prn "d:" d)
+        d (simp/simplify* d)
         _ (prn "d:" d)
         ]
     (if (= d 0) 'UNDEFINED (simp/simplify* (list '* (list '** d -1) n)))))
 
-(trig-simplify* '(* (** (cot x) 2) (** (tan (/ %pi 3)) 3)))
 
 (defmacro trig-simplify [& args]
   `(map (comp simp/simplify* trig-simplify* simp/simplify*) '(~@args)))
