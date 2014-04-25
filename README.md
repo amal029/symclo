@@ -185,7 +185,7 @@ symclo.core>  (natural/natural (+ (/ 1 x) (/ 1 y)))
 
 symclo.core> (def a (natural/natural* '(+ (/ 1 x) (/ 1 y))))
 
-\#'symclo.core/a
+#'symclo.core/a
 
 symclo.core> (simplify* (natural/denom a))
 
