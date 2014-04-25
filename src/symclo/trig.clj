@@ -47,6 +47,8 @@
          [:cot] (list '/ (list 'cos oo) (list 'sin oo))
          [_] v))
 
+(defn- less-than-zero? [x] (< x 0))
+
 ;;; FIXME: we can make this stronger
 (defn tr3 [[_ oo :as v]]
   (let [oo (simp/simplify* oo)]
@@ -81,11 +83,11 @@
                                  (and (= (mod y 2) 0) (= (trig-kind v) :cot)) (list 'cot x)
                                  :else v)
              ;; -angle
-             [['* -1 x]] (cond 
-                          (= (trig-kind v) :sin) (list '* -1 (list 'sin x))
-                          (= (trig-kind v) :cos) (list 'cos x)
-                          (= (trig-kind v) :tan) (list '* -1 (list 'tan x))
-                          (= (trig-kind v) :cot) (list '* -1 (list 'cot x))
+             [['* (a :guard [integer? less-than-zero?] ) x]] (cond 
+                          (= (trig-kind v) :sin) (list '* a (list 'sin x))
+                          (= (trig-kind v) :cos) (list (- a)'cos x)
+                          (= (trig-kind v) :tan) (list '* a (list 'tan x))
+                          (= (trig-kind v) :cot) (list '* a (list 'cot x))
                           :else v)
              [_] v)
       (catch Exception e v))))
