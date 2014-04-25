@@ -6,7 +6,7 @@ A Clojure library for computer algebra systems a la, MAPEL, MAXIMA, MATHEMATICA,
 
 Simplification of rational polynomials
 
-Simplification of trignometric identities
+Simplification of trignometric expressions
 
 Expansion of polynomials with rational coefficients
 
