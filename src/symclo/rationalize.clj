@@ -6,23 +6,25 @@
 (require '[symclo.core :as simp])
 (require '[symclo.util :as util])
 
+(defn- third [u] (first (nnext u)))
+
 (defn numer [u]
   (match [(simp/kind u)]
          [:fracop] (fnext u)
          [:quotop] (fnext u)
          [:powop] (cond
-                   (and (= (simp/kind (first (nnext u))) :number) (< (first (nnext u))) 0) 1
+                   (and (= (simp/kind (third u)) :number) (< (third u) 0)) 1
                    (and (= (simp/kind (first (nnext u))) :number) (>= (first (nnext u)) 0)) u
-                   (and (= (simp/kind (first (nnext u))) :fracop) (< (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) (simp/simplify* (list '** u -1))
-                   (and (= (simp/kind (first (nnext u))) :fracop) (>= (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) 1
+                   (and (= (simp/kind (first (nnext u))) :fracop) (< (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) 1 
+                   (and (= (simp/kind (first (nnext u))) :fracop) (>= (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) u
                    :else u)
          [:prodop] (list '* (numer (fnext u)) (numer (first (nnext u))))
          [_] u))
 
 (defn denom [u]
   (match [(simp/kind u)]
-         [:fracop] (nnext u)
-         [:quotop] (nnext u)
+         [:fracop] (first (nnext u))
+         [:quotop] (first (nnext u))
          [:powop] (cond
                    (and (= (simp/kind (first (nnext u))) :number) (< (first (nnext u)) 0)) (simp/simplify* (list '** u -1))
                    (and (= (simp/kind (first (nnext u))) :number) (>= (first (nnext u)) 0)) 1

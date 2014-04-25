@@ -40,7 +40,7 @@
   (cond 
    (integer? u) :number
    (symbol? u) :symbol
-   (number? u) (throw (Throwable. (str "fractions should only have integer numerators and denominators: " u)))
+   ;; (number? u) (throw (Throwable. (str "fractions should only have integer numerators and denominators: " u)))
    :else (kind-op u)))
 
 (defn- simplify-rational-number [u]
@@ -419,12 +419,12 @@
         [_ cv ov] v
         cu 
         (cond
-         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :fracop) cu
          (= (kind cu) :number) cu
          :else (throw (Throwable. (str "Wrong type: " cu))))
         cv
         (cond
-         (= (kind cv) :fracop) (/ (let [[_ n _] cv] n) (let [[_ _ d] cv] d))
+         (= (kind cv) :fracop) cv 
          (= (kind cv) :number) cv
          :else (throw (Throwable. (str "Wrong type: " cv))))
         ]
@@ -435,7 +435,7 @@
         [_ cu ou] u
         cu 
         (cond
-         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :fracop) cu
          (= (kind cu) :number) cu
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
@@ -446,7 +446,7 @@
         [_ cu ou] v
         cu 
         (cond
-         (= (kind cu) :fracop) (/ (let [[_ n _] cu] n) (let [[_ _ d] cu] d))
+         (= (kind cu) :fracop) cu 
          (= (kind cu) :number) cu
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
@@ -460,11 +460,17 @@
     (concat oos (if-not (empty? sos) (apply #(get-sum-operands (rest %)) sos)))))
 
 ;;; get all operands
-(defn get-prod-operands [x]
+(deftrace get-prod-operands [x]
   (let 
       [sos (filter #(= (kind %) :prodop) x)
-       oos (filter #(not (= (kind %) :prodop)) x)]
-    (concat oos (if-not (empty? sos) (apply #(get-prod-operands (rest %)) sos)))))
+       oos (filter #(not (= (kind %) :prodop)) x)
+       _ (prn "sos:" sos)]
+    (concat oos (if-not (empty? sos) (apply #(do (prn (count (rest %))) 
+                                                 ;; (get-prod-operands (rest %))
+                                                 '()
+                                                 ) sos)))))
+
+(get-prod-operands '((* (* (/ 1 2) (cos 0)) 1) (* 1 1)))
 
 ;;; simplify-sum-rec
 (defn- simplify-sum-rec [op]
@@ -524,7 +530,10 @@
                          res (map #(cond
                                     (= (kind %) :sumop) (let [[_ x y] %] (list '+ (simplify-product (list (first v) x)) 
                                                                                (simplify-product (list (first v) y))))
-                                    :else %) sum)]
+                                    :else %) sum)
+                         res (if-not (empty? res) (reduce #(list '* % %2) res))]
+                     ;; (prn "sum:" sum)
+                     ;; (prn "res:" res)
                      (cond
                       (and (not (= non-sum (first v))) (not (= (count res) 0))) (list '* non-sum res)
                       (not (= (count res) 0)) res
