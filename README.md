@@ -228,6 +228,10 @@ symclo.core> (def a (trig/trig-simplify* '(+ (cos (* 2 a)) (** (sin a) 2))))
 
 #'symclo.core/a
 
+symclo.core> a
+
+(+ (/ 1 2) (* (/ 1 2) (cos (* 2 a))))
+
 symclo.core> (deriv/deriv* a 'a)
 (* -1 (sin (* 2 a)))
 
