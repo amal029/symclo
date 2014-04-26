@@ -223,6 +223,9 @@ symclo.core> (deriv/deriv* '(** (+ x y) 4) 'x)
 
 (* (* 4 (** (+ x y) 3)) (+ 4 (* 4 (%deriv y x))))
 
+symclo.core> (simplify* (deriv/deriv* (expand/expand* '(** (+ x y) 4)) 'x))
+
+(+ (+ (+ (+ (+ (+ (+ (* 4 (** y 3)) (* (* 12 x) (** y 2))) (* (* 4 (%deriv y x)) (** x 3))) (* 4 (** x 3))) (* (* (* (** x 2) 12) (%deriv y x)) y)) (* (* 12 (** x 2)) y)) (* (* (* x 12) (%deriv y x)) (** y 2))) (* (* 4 (%deriv y x)) (** y 3)))
 
 symclo.core> (def a (trig/trig-simplify* '(+ (cos (* 2 a)) (** (sin a) 2))))
 
