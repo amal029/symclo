@@ -85,7 +85,7 @@
              ;; -angle
              [['* (a :guard [integer? less-than-zero?]) x]] (cond 
                                                              (= (trig-kind v) :sin) (list '* a (list 'sin x))
-                                                             (= (trig-kind v) :cos) (list (- a)'cos x)
+                                                             (= (trig-kind v) :cos) (list '* (- a) (list 'cos x))
                                                              (= (trig-kind v) :tan) (list '* a (list 'tan x))
                                                              (= (trig-kind v) :cot) (list '* a (list 'cot x))
                                                              :else v)

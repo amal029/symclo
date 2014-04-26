@@ -63,3 +63,6 @@
    (list u)
    :else
    (reduce #(into (complete-sub-expression %2) %) (list u) (rest u))))
+
+(defn free-of [u x]
+  (not (some (partial = x) (complete-sub-expression u))))

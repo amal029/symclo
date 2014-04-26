@@ -16,6 +16,7 @@
 (declare simplify-product-rec)
 (declare simplify-sum-rec)
 (declare get-prod-operands)
+(declare get-sum-operands)
 
 ;;; Euclid's gcd algorithm
 (defn- integer_gcd 
@@ -175,6 +176,7 @@
 (defn- simplify-diff [op]
   (let [res (list* (first op) (map #(list '* -1 %) (rest op)))]
     (simplify-sum res)))
+
 ;;; simplify-quotient
 ;;; This can only ever have two operand!
 (defn- simplify-quotient [[_ n d]]
@@ -380,52 +382,62 @@
                        (= (kind (first op)) :prodop) (merge-products (get-prod-operands (rest (first op))) w)
                        :else (merge-products (list (first op)) w)))))
 
-(defn- can-do? [u v]
+;;; TODO: Keep an eye on this!!
+(defn can-do? [u v]
   (cond
+   (and (= (exponent v) (exponent u)) (= (base v) (base u))) true
    (and (and (= (kind u) :prodop) (= (kind v) :prodop))
         (and (= (count (rest u)) 2))
         (and (= (count (rest u))) (= (count (rest v)))))
    (let
        [[_ cu ou] u
         [_ cv ov] v]
-     (if (and (= (base ou) (base ov))
-              (= (exponent ou) (exponent ov))
+     (if (and (can-do? ou ov)
               (or (= (kind cu) :fracop) (= (kind cu) :number))
               (or (= (kind cv) :fracop) (= (kind cv) :number)))
        true false))
    (= (kind u) :prodop)
    (let
        [[_ cu ou] u]
-     (if (and (= (base ou) (base v))
+     (if (and (= (count u) 3)
+              (= (base ou) (base v))
               (= (exponent ou) (exponent v))
               (or (= (kind cu) :fracop) (= (kind cu) :number)))
        true false)) 
    (= (kind v) :prodop)
    (let
        [[_ cv ov] v]
-     (if (and (= (base ov) (base u))
+     (if (and (= (count v) 3)
+              (= (base ov) (base u))
               (= (exponent ov) (exponent u))
               (or (= (kind cv) :fracop) (= (kind cv) :number)))
        true false)) 
    :else false))
 
 ;;; Getting the coefficients
-(defn- get-coefficients [u v]
+;;; TODO: Keep an eye on this!!
+(defn get-coefficients [u v]
   (cond 
    (and (= (kind u) :prodop) (= (kind v) :prodop)) 
    (let 
        [
         [_ cu ou] u
         [_ cv ov] v
-        cu 
+        [cu ou] 
         (cond
-         (= (kind cu) :fracop) cu
-         (= (kind cu) :number) cu
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) (= (kind cu) :fracop)) [cu ou]
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) (= (kind cu) :number)) [cu ou]
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) (= (kind cu) :fracop)) 
+         [(simplify-rne (list '* (second ou) cu)) (first (nnext ou))]
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) (= (kind cu) :number)) 
+         [(simplify-rne (list '* (second ou) cu)) (first (nnext ou))]
          :else (throw (Throwable. (str "Wrong type: " cu))))
         cv
         (cond
-         (= (kind cv) :fracop) cv 
-         (= (kind cv) :number) cv
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) (= (kind cv) :fracop)) cv 
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) (= (kind cv) :number)) cv
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) (= (kind cv) :fracop)) (simplify-rne (list '* (second ov) cv)) 
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) (= (kind cv) :number)) (simplify-rne (list '* (second ov) cv))
          :else (throw (Throwable. (str "Wrong type: " cv))))
         ]
      [(simplify-rne (list '+ cu cv)) ou])
@@ -435,22 +447,26 @@
         [_ cu ou] u
         cu 
         (cond
-         (= (kind cu) :fracop) cu
-         (= (kind cu) :number) cu
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :fracop)) (simplify-rne u)
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :number)) (simplify-rne u)
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :fracop)) (simplify-rne (list '+ cu 1))
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :number)) (simplify-rne (list '+ cu 1))
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
-     [(simplify-rne (list '+ cu 1)) v])
+     [cu v])
    :else 
    (let 
        [
         [_ cu ou] v
         cu 
         (cond
-         (= (kind cu) :fracop) cu 
-         (= (kind cu) :number) cu
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :fracop)) (simplify-rne v)
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :number)) (simplify-rne v)
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :fracop)) (simplify-rne (list '+ cu 1)) 
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :number)) (simplify-rne (list '+ cu 1))
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
-     [(simplify-rne (list '+ cu 1)) u])))
+     [cu u])))
 
 
 (defn tutu1 [u & us]
@@ -476,7 +492,7 @@
 ;; (get-prod-operands '((* (* (/ 1 2) (cos 0)) 1) (* 1 1)))
 
 ;;; simplify-sum-rec
-(defn- simplify-sum-rec [op]
+(defn simplify-sum-rec [op]
   (do 
     (cond
      (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :sumop) (= (kind y) :sumop))))) 
@@ -499,6 +515,7 @@
         (let [[res sym] (get-coefficients x y)]
           (cond
            (= res 0) '()
+           (or (= (kind sym) :fracop) (= (kind sym) :number)) (list (simplify-rne (list '+ res sym)))
            :else (list (simplify-product (list res sym)))))
         ;; lex-less-than is the ordering constraint for the cannoican normal form
         (algebra-compare y x) (list y x)
@@ -535,8 +552,6 @@
                                                                                (simplify-product (list (first v) y))))
                                     :else %) sum)
                          res (if-not (empty? res) (reduce #(list '* % %2) res))]
-                     ;; (prn "sum:" sum)
-                     ;; (prn "res:" res)
                      (cond
                       (and (not (= non-sum (first v))) (not (= (count res) 0))) (list '* non-sum res)
                       (not (= (count res) 0)) res
@@ -544,7 +559,7 @@
                    :else (reduce #(list '* % %2) v))))))
 
 ;;; simplify-sum
-(defn- simplify-sum [u]
+(defn simplify-sum [u]
   (cond
    (some #(= 'UNDEFINED %) u) 'UNDEFINED
    (= (count u) 1) u

@@ -12,6 +12,8 @@ Expansion of polynomials with rational coefficients
 
 Rationalization of polynomials with rational coefficients
 
+Simple derivates for polynomials 
+
 # TODO
 
 ~~Automatic trigonometric simplification algorithm~~
@@ -22,7 +24,7 @@ Simplification of polynomials with imaginary coefficients.
 
 Polynomial integration
 
-Polynomial differentiation (currently differentiation is available in Incanter)
+~~Polynomial differentiation (currently differentiation is available in Incanter)~~
 
 ## Usage
 
@@ -194,6 +196,40 @@ symclo.core> (simplify* (natural/denom a))
 symclo.core> (simplify* (natural/numer a))
 
 (+ x y)
+
+```
+#### Derivatives
+
+``` clojure 
+symclo.core> (deriv/deriv* 'x 'x)
+
+1
+
+
+symclo.core> (deriv/deriv* '(+ x 2) 'x)
+
+1
+
+symclo.core> (deriv/deriv* '(* x 2) 'x)
+
+2
+
+symclo.core> (deriv/deriv* '(** x 2) 'x)
+
+(* 2 x)
+
+
+symclo.core> (deriv/deriv* '(** (+ x y) 4) 'x)
+
+(* (* 4 (** (+ x y) 3)) (+ 4 (* 4 (%deriv y x))))
+
+
+symclo.core> (def a (trig/trig-simplify* '(+ (cos (* 2 a)) (** (sin a) 2))))
+
+#'symclo.core/a
+
+symclo.core> (deriv/deriv* a 'a)
+(* -1 (sin (* 2 a)))
 
 ```
 
