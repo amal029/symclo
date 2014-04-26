@@ -30,6 +30,11 @@ Polynomial integration
 
 * (simplify (expr)*): simplify expression
 * (expand (expr)*): expand expression
+* (trig-simplify (expr)*): trignometric simplification
+* (natural (expr)*): rationalization
+* (deriv* [expr symbol]): derivate with respect to symbol
+
+
 
 # Operators:
 * '* multiply
