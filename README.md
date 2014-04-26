@@ -45,7 +45,7 @@ Polynomial integration
 * 'sec secant
 * 'csc cosecant
 * %pi PI
-* %ln log to the natural base
+* %ln natural logarithm
 
 # Example REPL session
 ``` clojure
