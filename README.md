@@ -22,7 +22,7 @@ Polynomial factorization
 
 Simplification of polynomials with imaginary coefficients.
 
-Polynomial integration
+Elementary Polynomial integration
 
 ~~Polynomial differentiation (currently differentiation is available in Incanter)~~
 
