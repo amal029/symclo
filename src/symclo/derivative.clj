@@ -18,7 +18,7 @@
            [:symbol] (if (= x u) 1 (list '%deriv u x))
            [:powop] (let [[_ v w] u]
                       (cond 
-                       (or (= (simp/kind w) :fracop) (= (simp/kind w) :number))
+                       true ;; (or (= (simp/kind w) :fracop) (= (simp/kind w) :number))
                        (simp/simplify* (list '+ (list '* (list '* w (list '** v (list '- w 1))) (deriv* v x)) 
                                              (list '* (list '* (deriv* w x) (list '** v w)) (list '%ln v))))
                        :else (list '%deriv u x)))
