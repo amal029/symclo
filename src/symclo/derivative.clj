@@ -32,3 +32,6 @@
                 (util/free-of u x) 0
                 :else (list '%deriv u x)))
     (list '%deriv u x)))
+
+(defmacro deriv [arg sym]
+  `(simp/simplify* (deriv* (simp/simplify* '~arg) '~sym)))

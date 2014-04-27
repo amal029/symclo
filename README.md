@@ -32,7 +32,7 @@ Elementary Polynomial integration
 * (expand (expr)*): expand expression
 * (trig-simplify (expr)*): trignometric simplification
 * (natural (expr)*): rationalization
-* (deriv* [expr symbol]): derivate with respect to symbol
+* (deriv [expr symbol]): derivate with respect to symbol
 
 
 
@@ -207,12 +207,12 @@ symclo.core> (simplify* (natural/numer a))
 #### Derivatives
 
 ``` clojure 
-symclo.core> (deriv/deriv* 'x 'x)
+symclo.core> (deriv/deriv x x)
 
 1
 
 
-symclo.core> (deriv/deriv* '(+ x 2) 'x)
+symclo.core> (deriv/deriv (+ x 2) x)
 
 1
 
@@ -220,15 +220,15 @@ symclo.core> (deriv/deriv* '(* x 2) 'x)
 
 2
 
-symclo.core> (deriv/deriv* '(** x 2) 'x)
+symclo.core> (deriv/deriv (** x 2) x)
 
 (* 2 x)
 
-symclo.core> (deriv/deriv* '(** x (** x 2)) 'x)
+symclo.core> (deriv/deriv (** x (** x 2)) x)
 
 (+ (** x (+ 1 (** x 2))) (* (* 2 (%ln x)) (** x (+ 1 (** x 2)))))
 
-symclo.core> (deriv/deriv* '(** (+ x y) 4) 'x)
+symclo.core> (deriv/deriv (** (+ x y) 4) x)
 
 (* (* 4 (** (+ x y) 3)) (+ 4 (* 4 (%deriv y x))))
 
