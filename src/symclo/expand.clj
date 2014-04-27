@@ -41,20 +41,6 @@
 
 (defn- expand-power [u n]
   (if (and (integer? n) (>= n 0))
-    ;; (cond
-    ;;  (= (simp/kind u) :sumop)
-    ;;  (if (= (count u) 3)
-    ;;    (let [[ _ f r] u]
-    ;;      (loop [k 0
-    ;;             s 0]
-    ;;        (if (<= k n)
-    ;;          (let [c (/ (simp/factorial n) (* (simp/factorial k) (simp/factorial (- n k))))
-    ;;                s (list '+ s (expand-product (list '* c (list '** f (- n k)))
-    ;;                                             (expand-power r k)))]
-    ;;            (recur (+ k 1) s))
-    ;;          s)))
-    ;;    (list '** u n))
-    ;;  :else (list '** u n))
     (expand* (reduce #(list '* % %2) (repeat n u)))
     (list '** u n)))
 

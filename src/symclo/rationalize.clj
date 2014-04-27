@@ -14,24 +14,24 @@
          [:quotop] (fnext u)
          [:powop] (cond
                    (and (= (simp/kind (third u)) :number) (< (third u) 0)) 1
-                   (and (= (simp/kind (first (nnext u))) :number) (>= (first (nnext u)) 0)) u
-                   (and (= (simp/kind (first (nnext u))) :fracop) (< (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) 1 
-                   (and (= (simp/kind (first (nnext u))) :fracop) (>= (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) u
+                   (and (= (simp/kind (third u)) :number) (>= (third u) 0)) u
+                   (and (= (simp/kind (third u)) :fracop) (< (/ (fnext (third u)) (first (nnext (third u)))) 0)) 1 
+                   (and (= (simp/kind (third u)) :fracop) (>= (/ (fnext (third u)) (first (nnext (third u)))) 0)) u
                    :else u)
-         [:prodop] (list '* (numer (fnext u)) (numer (first (nnext u))))
+         [:prodop] (list '* (numer (fnext u)) (numer (third u)))
          [_] u))
 
 (defn denom [u]
   (match [(simp/kind u)]
-         [:fracop] (first (nnext u))
-         [:quotop] (first (nnext u))
+         [:fracop] (third u)
+         [:quotop] (third u)
          [:powop] (cond
-                   (and (= (simp/kind (first (nnext u))) :number) (< (first (nnext u)) 0)) (simp/simplify* (list '** u -1))
-                   (and (= (simp/kind (first (nnext u))) :number) (>= (first (nnext u)) 0)) 1
-                   (and (= (simp/kind (first (nnext u))) :fracop) (< (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) (simp/simplify* (list '** u -1))
-                   (and (= (simp/kind (first (nnext u))) :fracop) (>= (/ (fnext (first (nnext u))) (first (nnext (first (nnext u))))) 0)) 1
+                   (and (= (simp/kind (third u)) :number) (< (third u) 0)) (simp/simplify* (list '** u -1))
+                   (and (= (simp/kind (third u)) :number) (>= (third u) 0)) 1
+                   (and (= (simp/kind (third u)) :fracop) (< (/ (fnext (third u)) (first (nnext (third u)))) 0)) (simp/simplify* (list '** u -1))
+                   (and (= (simp/kind (third u)) :fracop) (>= (/ (fnext (third u)) (first (nnext (third u)))) 0)) 1
                    :else 1)
-         [:prodop] (list '* (denom (fnext u)) (denom (first (nnext u))))
+         [:prodop] (list '* (denom (fnext u)) (denom (third u)))
          [_] 1))
 
 (defn- natural-sum [u v]
@@ -48,9 +48,9 @@
    (natural (+ (/ 1 x) (/ 1 y)) = (/ (+ x y) (* x y)))" 
   [u] 
   (cond
-   (= (simp/kind u) :powop) (list '** (natural* (fnext u)) (first (nnext u)))
-   (= (simp/kind u) :prodop) (list '* (natural* (fnext u)) (natural* (first (nnext u))))
-   (= (simp/kind u) :sumop) (natural-sum (natural* (fnext u)) (natural* (first (nnext u))))
+   (= (simp/kind u) :powop) (list '** (natural* (fnext u)) (third u))
+   (= (simp/kind u) :prodop) (list '* (natural* (fnext u)) (natural* (third u)))
+   (= (simp/kind u) :sumop) (natural-sum (natural* (fnext u)) (natural* (third u)))
    :else u))
 
 (defmacro natural [& args]

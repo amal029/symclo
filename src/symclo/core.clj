@@ -425,19 +425,18 @@
         [_ cv ov] v
         [cu ou] 
         (cond
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) (= (kind cu) :fracop)) [cu ou]
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) (= (kind cu) :number)) [cu ou]
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) (= (kind cu) :fracop)) 
-         [(simplify-rne (list '* (second ou) cu)) (first (nnext ou))]
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) (= (kind cu) :number)) 
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) 
+              (or (= (kind cu) :number) (= (kind cu) :fracop))) [cu ou]
+         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) 
+              (or (= (kind cu) :number) (= (kind cu) :fracop))) 
          [(simplify-rne (list '* (second ou) cu)) (first (nnext ou))]
          :else (throw (Throwable. (str "Wrong type: " cu))))
         cv
         (cond
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) (= (kind cv) :fracop)) cv 
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) (= (kind cv) :number)) cv
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) (= (kind cv) :fracop)) (simplify-rne (list '* (second ov) cv)) 
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) (= (kind cv) :number)) (simplify-rne (list '* (second ov) cv))
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) 
+              (or (= (kind cv) :number) (= (kind cv) :fracop))) cv 
+         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) 
+              (or (= (kind cv) :number) (= (kind cv) :fracop))) (simplify-rne (list '* (second ov) cv)) 
          :else (throw (Throwable. (str "Wrong type: " cv))))
         ]
      [(simplify-rne (list '+ cu cv)) ou])
@@ -447,10 +446,8 @@
         [_ cu ou] u
         cu 
         (cond
-         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :fracop)) (simplify-rne u)
-         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :number)) (simplify-rne u)
-         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :fracop)) (simplify-rne (list '+ cu 1))
-         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :number)) (simplify-rne (list '+ cu 1))
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (or (= (kind cu) :number) (= (kind cu) :fracop))) (simplify-rne u)
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (or (= (kind cu) :number) (= (kind cu) :fracop))) (simplify-rne (list '+ cu 1))
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
      [cu v])
@@ -460,10 +457,10 @@
         [_ cu ou] v
         cu 
         (cond
-         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :fracop)) (simplify-rne v)
-         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (= (kind cu) :number)) (simplify-rne v)
-         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :fracop)) (simplify-rne (list '+ cu 1)) 
-         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind cu) :number)) (simplify-rne (list '+ cu 1))
+         (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (or (= (kind cu) :number) (= (kind cu) :fracop))) 
+         (simplify-rne v)
+         (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (or (= (kind cu) :number) (= (kind cu) :fracop))) 
+         (simplify-rne (list '+ cu 1)) 
          :else (throw (Throwable. (str "Wrong type: " cu))))
         ]
      [cu u])))
