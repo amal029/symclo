@@ -21,10 +21,12 @@
 (defn- substitution-method [f x]
   (let [P (trial-sub f)
         FS (map #(if (and (util/free-of % x) (not= % x))
-                   (let [u (substitute (simp/simplify* (list '/ f (deriv/deriv* % x))) [% 'v])]
+                   (let [u (substitute (simp/simplify* (list '/ f (deriv/deriv* % x))) % 'v)]
                      (if (util/free-of u x)
-                       (substitute (integrate* u 'v) ['v %])))) P)]
-    (some (complement (partial = 'FAIL)) FS)))
+                       (substitute (integrate* u 'v) 'v %)))) P)]
+    (if (some (partial not= 'FAIL) FS)
+      (first (filter (partial not= 'FAIL) FS))
+      'FAIL)))
 
 (defn integrate* [f x]
   (let [F (integral-table f x)]
