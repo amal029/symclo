@@ -57,12 +57,35 @@
    :else false))
 
 
+;;; Adhering to the definition of simplification operator in J. Cohen text
+;;;  (+ c (+ a b)) gets converted to (+ a b c)
+;;;  (* c (* a b)) gets converted to (* a b c)
 (defn complete-sub-expression [u]
   (cond
    (or (= (simp/kind u) :fracop) (= (simp/kind u) :symbol) (= (simp/kind u) :number)) 
    (list u)
    :else
-   (reduce #(into (complete-sub-expression %2) %) (list u) (rest u))))
+   (let [u (cond 
+            (= (simp/kind u) :sumop) (cons (first u) (simp/get-sum-operands (rest u))) 
+            (= (simp/kind u) :prodop) (cons (first u) (simp/get-prod-operands (rest u))) 
+            :else u)]
+     (reduce #(into (complete-sub-expression %2) %) (list u) (rest u)))))
+
+(defn substitute [f x y]
+  (cond
+   (= (simp/simplify* f) (simp/simplify* x)) (simp/simplify* y)
+   (or (= (simp/kind f) :fracop) (= (simp/kind f) :symbol) (= (simp/kind f) :number)) 
+   f
+   (= (simp/kind f) :prodop) 
+   (let [operands (simp/get-prod-operands (rest f))
+         operands (map #(substitute % x y) operands)]
+     (reduce #(list '* % %2) operands))
+   (= (simp/kind f) :sumop) 
+   (let [operands (simp/get-sum-operands (rest f))
+         operands (map #(substitute % x y) operands)]
+     (reduce #(list '+ % %2) operands))
+   :else
+   (cons (first f) (map #(substitute % x y) (rest f)))))
 
 (defn free-of [u x]
   (not (some (partial = x) (complete-sub-expression u))))

@@ -12,7 +12,11 @@ Expansion of polynomials with rational coefficients
 
 Rationalization of polynomials with rational coefficients
 
-Simple derivates for polynomials 
+Simple derivates for polynomials
+
+Simple integration of polynomials
+
+Substitution and expression solving
 
 # TODO
 
@@ -22,7 +26,12 @@ Polynomial factorization
 
 Simplification of polynomials with imaginary coefficients.
 
-Elementary Polynomial integration
+~~Elementary Polynomial integration~~
+Integration of polynomials with rationals
+
+Integration of polynomials with radicals
+
+Integration of polynomials with complex trignometric expressions
 
 ~~Polynomial differentiation (currently differentiation is available in Incanter)~~
 
@@ -33,7 +42,7 @@ Elementary Polynomial integration
 * (trig-simplify (expr)*): trignometric simplification
 * (natural (expr)*): rationalization
 * (deriv [expr symbol]): derivate with respect to symbol
-
+* (integrate [expr symbol]): integrate with respect to symbol
 
 
 # Operators:
@@ -246,6 +255,71 @@ symclo.core> a
 
 symclo.core> (deriv/deriv* a 'a)
 (* -1 (sin (* 2 a)))
+
+```
+
+#### Integration of elementary polynomials
+
+``` clojure
+symclo.core> (integrate/integrate 1 x)
+
+x
+
+symclo.core> (integrate/integrate x x)
+
+(* (/ 1 2) (** x 2))
+
+symclo.core> (integrate/integrate (** x 3) x)
+
+(* (/ 1 4) (** x 4))
+
+symclo.core> (integrate/integrate (** %e x) x)
+
+(** %e x)
+
+symclo.core> (integrate/integrate (* 2 x (cos (** x 2))) x)
+
+(sin (** x 2))
+
+symclo.core> (integrate/integrate (* (+ (* 2 x) 1) (cos (+ (** x 2) x))) x)
+
+(sin (+ x (** x 2)))
+
+symclo.core> (integrate/integrate (* (+ x 1) (+ x 2)) x)
+
+(+ (+ (* 2 x) (* (/ 3 2) (** x 2))) (* (/ 1 3) (** x 3)))
+
+symclo.core> (integrate/integrate (** (+ x 1) 2) x)
+
+(* (/ 1 3) (** (+ 1 x) 3))
+
+
+symclo.core> (integrate/integrate (** x -1) x)
+
+(%ln x)
+```
+
+#### Checking if the integrals are actually correct
+
+``` clojure
+
+symclo.core> (def a (simplify* '(* (+ (* 2 x) 1) (cos (+ (** x 2) x)))))
+
+#'symclo.core/a
+symclo.core> a
+
+(* (cos (+ x (** x 2))) (+ 1 (* 2 x)))
+
+symclo.core> (def b  (simplify* (integrate/integrate* a 'x)))
+
+#'symclo.core/b
+symclo.core> b
+
+(sin (+ x (** x 2)))
+
+symclo.core> (= a (simplify* (deriv/deriv* b 'x)))
+
+true
 
 ```
 
