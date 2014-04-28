@@ -27,7 +27,7 @@ Polynomial factorization
 Simplification of polynomials with imaginary coefficients.
 
 ~~Elementary Polynomial integration~~
-Integration of polynomials with rationals
+Integration of polynomials in rational form
 
 Integration of polynomials with radicals
 
