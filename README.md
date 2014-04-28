@@ -58,8 +58,9 @@ Integration of polynomials with complex trignometric expressions
 * 'cot cotangent
 * 'sec secant
 * 'csc cosecant
-* %pi PI
-* %ln natural logarithm
+* '%pi PI
+* '%ln natural logarithm
+* '%e the "e" operator
 
 # Example REPL session
 ``` clojure
