@@ -11,7 +11,6 @@
 
 (def third (comp first nnext))
 
-;;; TODO: fill in all the functions.
 (declare trial-sub)
 (declare linear-props)
 (declare integral-table)
