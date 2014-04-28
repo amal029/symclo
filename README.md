@@ -317,9 +317,34 @@ symclo.core> b
 
 (sin (+ x (** x 2)))
 
+;;; checking with db/dx
 symclo.core> (= a (simplify* (deriv/deriv* b 'x)))
 
 true
+
+```
+
+#### Substitute and solve
+
+``` clojure
+
+symclo.core> (simplify* (util/substitute '(+ x 1) 'x 1))
+
+2
+
+symclo.core> (simplify* (util/substitute (simplify* '(* x (+ x y))) 'x 2))
+
+(+ 4 (* 2 y))
+
+;;; composition of substitute and solve -- note that composition of substitution is not commutative
+symclo.core> (simplify* (util/substitute (util/substitute (simplify* '(* x (+ x y))) 'x 2) '(+ x y) 3))
+
+(+ 4 (* 2 y))
+
+symclo.core> (simplify* (util/substitute (util/substitute (simplify* '(* x (+ x y))) '(+ x y) 3) 'x 2))
+
+6
+
 
 ```
 
