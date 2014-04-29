@@ -18,6 +18,12 @@ Simple integration of polynomials
 
 Substitution and expression solving
 
+Coefficient and degree detection
+
+Polynomial division (untested)
+
+Polynomial expansion (untested)
+
 # TODO
 
 ~~Automatic trigonometric simplification algorithm~~
@@ -27,7 +33,7 @@ Polynomial factorization
 Simplification of polynomials with imaginary coefficients.
 
 ~~Elementary Polynomial integration~~
-Integration of polynomials in rational form
+~~Integration of polynomials in rational form~~
 
 Integration of polynomials with radicals
 
@@ -298,6 +304,13 @@ symclo.core> (integrate/integrate (** (+ x 1) 2) x)
 symclo.core> (integrate/integrate (** x -1) x)
 
 (%ln x)
+
+;;; Integrating polynomials in rational form
+
+symclo.core>  (integrate/integrate* (simplify* '(/ (cos x) (+ (** (sin x) 2) (* 3 (sin x)) 4))) 'x)
+
+(* (* 2 (** 7 (/ -1 2))) (arctan (* (** 7 (/ -1 2)) (+ 3 (* 2 (sin x))))))
+
 ```
 
 #### Checking if the integrals are actually correct
@@ -345,7 +358,43 @@ symclo.core> (simplify* (util/substitute (util/substitute (simplify* '(* x (+ x 
 symclo.core> (simplify* (util/substitute (util/substitute (simplify* '(* x (+ x y))) '(+ x y) 3) 'x 2))
 
 6
+```
 
+#### Utility functions for polynomials
+
+``` clojure
+;;; Degree of polynomials -- argument 1 is the polynomial and argument 2 is the set (or a single symbol)
+;;; with respect to which the degree needs to be found out.
+symclo.core> (util/degree-polynomial (simplify* '(* 3 w (** x 2) (** y 3) (** z 4))) #{'x 'z})
+
+6
+
+symclo.core> (util/degree-polynomial (simplify* '(+ (* 2 (** x 2) y (** z 3)) (* w x (** z 6)))) #{'x 'z})
+
+7
+
+;;; Coefficients of polynomials arg-1 is the polynomial, arg-2 is the
+;;; symbol and arg-3 is the degree whose coefficient we want.
+
+symclo.core> (util/coefficient-polynomial-gpe (simplify* '(+ (* 3 x (** y 2)) (* 5 (** x 2) y) (* 7 x) 9)) 'x 1)
+
+(+ 7 (* (* (* x (** y 2)) 3) (** x -1)))
+
+;;; Nesting of the coefficient operator to find the coefficient of '(* x (** y 2))
+
+symclo.core> (util/coefficient-polynomial-gpe (simplify* (util/coefficient-polynomial-gpe (simplify* '(+ (* 3 x (** y 2)) (* 5 (** x 2) y) (* 7 x) 9)) 'x 1)) 'y 2)
+
+3
+
+;;; Nesting to find the leading coefficient
+
+symclo.core> (def u (simplify* '(+ (* 3 x (** y 2)) (* 5 (** x 2) y) (* 7 x) 9))) 
+
+#'symclo.core/u
+symclo.core> u
+(+ (+ (+ 9 (* 7 x)) (* (* 5 (** x 2)) y)) (* (* 3 x) (** y 2)))
+symclo.core> (util/coefficient-polynomial-gpe u 'x (util/degree-polynomial u 'x))
+(* (* (* (** x 2) y) 5) (** x -2))
 
 ```
 
