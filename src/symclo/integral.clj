@@ -8,6 +8,7 @@
 (require '[symclo.trig :as trig])
 (require '[symclo.derivative :as deriv])
 (require '[symclo.util :as util])
+(require '[symclo.rationalize :as natural])
 
 (def third (comp first nnext))
 
@@ -16,6 +17,7 @@
 (declare integral-table)
 (declare substitution-method)
 (declare integrate*)
+(declare integrate-rational-form)
 
 ;;; Add more definition here
 (defn integral-table [f x]
@@ -82,6 +84,69 @@
       (first (filter (partial not= 'FAIL) FS))
       'FAIL)))
 
+(defn is-quadratic? 
+  "Checks if u is quadratic w.r.t x"
+  [u x]
+  (= (util/degree-polynomial u x) 2))
+
+(defn- is-linear? 
+  "Checks if u is linear w.r.t x"
+  [u x]
+  (= (util/degree-polynomial u x) 1))
+
+(defn integrate-rational-form [u x]
+  (cond
+   ;; The first case of induction
+   (and (= (natural/numer u) 1) (is-quadratic? (natural/denom u) x))
+   (let [a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
+         b (util/coefficient-polynomial-gpe (natural/denom u) x 1)
+         c (util/coefficient-polynomial-gpe (natural/denom u) x 0)
+         vv (simp/simplify* (list '- (list '** b 2) (list '* 4 a c)))]
+     (if (or (= (simp/kind vv) :fracop) (= (simp/kind vv) :number))
+       (cond
+        (= vv 0)
+        (let [two-ax-plus-b (simp/simplify* (list '+ (list '* 2 a x) b))]
+          (simp/simplify* (list '* -1 (list '/ 2 two-ax-plus-b))))
+        (> vv 0)
+        (let [b2-minus-4ac-sqrt (simp/simplify* (list '** (list '- (list '** b 2) (list '* 4 a c)) (list '/ 1 2)))
+              two-ax-plus-b (simp/simplify* (list '+ (list '* 2 a x) b))]
+          (simp/simplify* (list '* 2 
+                                (list '/ 
+                                      (list 'arctanh
+                                            (list '/ two-ax-plus-b b2-minus-4ac-sqrt)) 
+                                      b2-minus-4ac-sqrt))))
+        :else
+        (let [four-ac-minus-b2-sqrt (simp/simplify* (list '** (list '- (list '* 4 a c) (list '** b 2)) (list '/ 1 2)))
+              two-ax-plus-b (simp/simplify* (list '+ (list '* 2 a x) b))]
+          (simp/simplify* (list '* 2 
+                                (list '/ 
+                                      (list 'arctan 
+                                            (list '/ two-ax-plus-b four-ac-minus-b2-sqrt)) 
+                                      four-ac-minus-b2-sqrt)))))
+       ;; else (b^2 - 4ac) is not a number or fracop
+       (let [four-ac-minus-b2-sqrt (simp/simplify* (list '** (list '- (list '* 4 a c) (list '** b 2)) (list '/ 1 2)))
+             two-ax-plus-b (simp/simplify* (list '+ (list '* 2 a x) b))]
+         (simp/simplify* (list '* 2 
+                               (list '/ 
+                                     (list 'arctan 
+                                           (list '/ two-ax-plus-b four-ac-minus-b2-sqrt)) 
+                                     four-ac-minus-b2-sqrt))))))
+
+   ;; inductive case with linear numerator form
+   (and (is-linear? (natural/numer u) x) (is-quadratic? (natural/denom u) x))
+   (let [r (util/coefficient-polynomial-gpe (natural/numer u) x 1)
+         s (util/coefficient-polynomial-gpe (natural/numer u) x 0)
+         a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
+         b (util/coefficient-polynomial-gpe (natural/denom u) x 1)
+         c (util/coefficient-polynomial-gpe (natural/denom u) x 0)
+         alpha (simp/simplify* (list '/ r (list '* 2 a)))
+         beta (simp/simplify* (list '- s (list '/ (list '* r b) (list '* 2 a))))]
+     (simp/simplify* (list '+ 
+                           (list '* alpha (list '%ln (natural/denom u)))
+                           (list '* beta (integrate-rational-form (simp/simplify* (list '/ 1 (natural/denom u))))))))
+   ;; Add the induction cases when the denominator is a power type
+   :else 'FAIL))
+
 (defn integrate* [f x]
   (let [F (integral-table f x)]
     (if (= 'FAIL F) 
@@ -90,7 +155,10 @@
           (let [F (substitution-method f x)]
             (if (= 'FAIL F)
               (let [g (simp/simplify* (expand/expand* f))]
-                (if (not= g f) (integrate* g x) F))
+                (if (not= g f) 
+                  (let [F (integrate* g x)]
+                    (if = 'FAIL F) (integrate-rational-form f x) F) 
+                  (integrate-rational-form f x)))
               ;; else
               F))
           ;; else
