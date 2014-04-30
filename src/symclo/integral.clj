@@ -84,12 +84,12 @@
       (first (filter (partial not= 'FAIL) FS))
       'FAIL)))
 
-(defn is-quadratic? 
+(defn quadratic? 
   "Checks if u is quadratic w.r.t x"
   [u x]
   (= (util/degree-polynomial u x) 2))
 
-(defn- is-linear? 
+(defn- linear? 
   "Checks if u is linear w.r.t x"
   [u x]
   (= (util/degree-polynomial u x) 1))
@@ -97,7 +97,7 @@
 (defn integrate-rational-form [u x]
   (cond
    ;; The first case of induction
-   (and (= (natural/numer u) 1) (is-quadratic? (natural/denom u) x))
+   (and (= (natural/numer u) 1) (quadratic? (natural/denom u) x))
    (let [a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
          b (util/coefficient-polynomial-gpe (natural/denom u) x 1)
          c (util/coefficient-polynomial-gpe (natural/denom u) x 0)
@@ -133,7 +133,7 @@
                                      four-ac-minus-b2-sqrt))))))
 
    ;; inductive case with linear numerator form
-   (and (is-linear? (natural/numer u) x) (is-quadratic? (natural/denom u) x))
+   (and (linear? (natural/numer u) x) (quadratic? (natural/denom u) x))
    (let [r (util/coefficient-polynomial-gpe (natural/numer u) x 1)
          s (util/coefficient-polynomial-gpe (natural/numer u) x 0)
          a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
@@ -145,6 +145,45 @@
                            (list '* alpha (list '%ln (natural/denom u)))
                            (list '* beta (integrate-rational-form (simp/simplify* (list '/ 1 (natural/denom u))))))))
    ;; Add the induction cases when the denominator is a power type
+   (and (= (natural/numer u) 1) (simp/kind (natural/denom u) :powop))
+   (let [[_ udb udp] (natural/denom u)]
+     (if (and (integer? udp) (quadratic? udb))
+       ;; then
+       (let [a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
+             b (util/coefficient-polynomial-gpe (natural/denom u) x 1)
+             c (util/coefficient-polynomial-gpe (natural/denom u) x 0)
+             b2-minus-4ac (simp/simplify* (list '- (list '** b 2) (list '* 4 a c)))
+             two-ax-plus-b (simp/simplify* (list '+ (list '* 2 a x) b))]
+         (simp/simplify* (list '+ 
+                               (list '/ 
+                                     (list '* -1 two-ax-plus-b)
+                                     (list '* (dec udp) b2-minus-4ac (list '** udb (dec udp))))
+                               (list '/ 
+                                     (list '* -1 a (- (* 4 udp) 6))
+                                     (list '* (dec udp) b2-minus-4ac
+                                           (integrate-rational-form (simp/simplify* (list '** udb (dec udp)))))))))
+       ;; else
+       'FAIL))
+   (and (linear? (natural/numer u) x) (simp/kind (natural/denom u) :powop))
+   (let [[_ udb udp] (natural/denom u)]
+     (if (and (integer? udp) (quadratic? udb))
+       ;; then
+       (let [r (util/coefficient-polynomial-gpe (natural/numer u) x 1)
+             s (util/coefficient-polynomial-gpe (natural/numer u) x 0)
+             a (util/coefficient-polynomial-gpe (natural/denom u) x 2)
+             b (util/coefficient-polynomial-gpe (natural/denom u) x 1)
+             c (util/coefficient-polynomial-gpe (natural/denom u) x 0)
+             minus-b-r-plus-2-as (simp/simplify* (list '+ (list '* -1 b r) (list '* 2 a s)))]
+         (simp/simplify* (list '+
+                               (list '/ 
+                                     (list '* -1 r)
+                                     (list '* 2 (dec udp) a (list '** udb (dec udp))))
+                               (list '* 
+                                     (list '/ minus-b-r-plus-2-as (list '* 2 a))
+                                     (integrate-rational-form (simp/simplify* 
+                                                               (list '/ 1 (list '** udb udp))))))))
+       ;; else
+       'FAIL))
    :else 'FAIL))
 
 (defn integrate* [f x]

@@ -6,6 +6,7 @@
 (require '[symclo.core :as simp])
 (require '[symclo.expand :as expand])
 
+(declare G)
 (def third (comp first nnext))
 
 (defn is-addition? [[_ x y :as v]]
@@ -197,7 +198,6 @@
 (defn polynomial-lce [u x]
   (coefficient-polynomial-gpe u x (degree-polynomial u x)))
 
-
 (defn polynomial-division 
   "Divides polynomial u by v, w.r.t. x a symbol"
   [u v x]
@@ -209,7 +209,7 @@
     (if (and (not= r 0) (>= m n))
       ;; then
       (let [lcr (polynomial-lce r x)
-            s (/ lcr lcv)
+            s (simp/simplify* (list '/ lcr lcv))
             q (simp/simplify* (list '+ q (list '* s (list '** x (list '- m n)))))
             r (simp/simplify* (expand/expand* (list '- (list '- r (list '* (list '** x m) lcr))
                                                     (list '* (list '* s (list '** x (list '- m n)))
@@ -234,13 +234,76 @@
   (if (= u 0) 
     0
     (let [d (polynomial-division u v x)]
-      (substitute (simp/simplify* (expand/expand* (list '+ (second d) (list '* t (polynomial-expansion* (first d) v x t))))) t v))))
+      (simp/simplify* (expand/expand* (list '+ (second d) (list '* t (polynomial-expansion* (first d) v x t))))))))
 
 
 (defn polynomial-expansion
   "The polynomial expansion of u in terms of v involves the
    representation of u as a sum whose terms contain non-negative integer
    powers of v. Expansion happens w.r.t symbols x. Do not use the
-   literal symbol t in v or x" 
+   literal symbol t in v or u" 
   [u v x]
   (substitute (polynomial-expansion* u v x 't) 't v))
+
+(defn lm [u l]
+  (cond
+   (empty? l) u
+   :else
+   (let [m (degree-polynomial u (first l))
+         c (coefficient-monomial-gpe u (first l) m)]
+     (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
+
+(defn mv-rec-polynomial-div 
+  "Multivariate recursive structure based polynomial division." 
+  [u v l]
+  (cond
+   (empty? l) [(simp/simplify* (list '/ u v)) 0]
+   :else
+   (loop [x (first l)
+          r u
+          m (degree-polynomial r x)
+          n (degree-polynomial v x)
+          q 0
+          lcv (polynomial-lce v x)
+          d [0 0]]
+     (if (or (not= (second d) 0) (>= m n))
+       (let [lcr (polynomial-lce r x)
+             d (mv-rec-polynomial-div lcr lcv (rest l))
+             [q r m] (if (not= (second d) 0)
+                       [q r m]
+                       [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
+                        (simp/simplify* (expand/expand* (list '- r (list '* v (first d) (list '** x (- m n)))))) ;r
+                        (degree-polynomial r x) ;m
+                        ])]
+         (recur x r m n q lcv d))
+       [(simp/simplify* (expand/expand* q)) r]))))
+
+(defn G 
+  "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
+  a multivariate GME" 
+  [u v l] 
+  (cond
+   (= (simp/kind u) :sumop)
+   (let [ops (simp/get-sum-operands (rest u))
+         res (filter #(= 0 (second %)) (map #(G % v l) ops))]
+     (if (empty? res) 
+       0
+       (simp/simplify* (reduce #(list '+ (first %) (first %2)) res))))
+   :else
+   (mv-rec-polynomial-div u v l)))
+
+(defn mv-polynomial-division 
+  "Multivariate polynomial division. u gets divided by v using monomial
+  division. l is the list of symbols, (first l) is the main
+  symbol. Returns a 2 vector, first is the quotient and second is the
+  remainder."  
+  [u v l]
+  (loop [q 0
+         r u
+         vl (lm v l)
+         f (G r vl l)]
+    (if (not= f 0)
+      (let [q (simp/simplify* (list '+ q f))
+            r (simp/simplify* (expand/expand* (list '- (list '* f v) r)))]
+        (recur q r vl (G r vl l)))
+      [q r])))

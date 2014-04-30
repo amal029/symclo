@@ -29,6 +29,18 @@
      (= (first op) 'cot) :cot
      (= (first op) 'sec) :sec
      (= (first op) 'csc) :csc
+     (= (first op) 'arctan) :arctan
+     (= (first op) 'arccsc) :arccsc
+     (= (first op) 'arcsec) :arcsec
+     (= (first op) 'arcsin) :arcsin
+     (= (first op) 'arccos) :arccos
+     (= (first op) 'arccot) :arccot
+     (= (first op) 'sinh) :sinh
+     (= (first op) 'cosh) :cosh
+     (= (first op) 'tanh) :tanh
+     (= (first op) 'coth) :coth
+     (= (first op) 'sech) :sech
+     (= (first op) 'csch) :csch
      :else :other)
     :other))
 

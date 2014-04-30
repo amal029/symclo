@@ -227,7 +227,6 @@ symclo.core> (deriv/deriv x x)
 
 1
 
-
 symclo.core> (deriv/deriv (+ x 2) x)
 
 1
@@ -262,6 +261,18 @@ symclo.core> a
 
 symclo.core> (deriv/deriv* a 'a)
 (* -1 (sin (* 2 a)))
+
+;;; Derivative of complex trignometric functions needs pre-processing step
+
+;;; tan(x)' cannot be solved by just using the derivative
+symclo.core> (deriv/deriv* '(tan x) 'x)
+
+(%deriv (tan x) x)
+
+;;; tan(x)' can be solved using trig-simplification and then deriving that 
+symclo.core> (trig/trig-simplify* (deriv/deriv* (trig/trig-simplify* '(tan x)) 'x))
+
+(** (+ (/ 1 2) (* (/ 1 2) (cos (* 2 x)))) -1)
 
 ```
 
