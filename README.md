@@ -24,6 +24,8 @@ Univariate Polynomial division
 
 Univariate Polynomial expansion
 
+Simultaneous linear equation solver
+
 Multivariate Polynomial division (untested)
 
 Multivariate Polynomial expansion (untested)
@@ -454,7 +456,7 @@ symclo.core> (util/coefficient-polynomial-gpe (util/polynomial-expansion* u '(**
 
 ```
 
-#### Solve simulataneous linear equations
+#### Solve simultaneous linear equations
 ``` clojure
 symclo.core> eq1
 
