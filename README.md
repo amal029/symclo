@@ -20,9 +20,13 @@ Substitution and expression solving
 
 Coefficient and degree detection
 
-Polynomial division (untested)
+Univariate Polynomial division
 
-Polynomial expansion (untested)
+Univariate Polynomial expansion
+
+Multivariate Polynomial division (untested)
+
+Multivariate Polynomial expansion (untested)
 
 # TODO
 
@@ -35,7 +39,7 @@ Simplification of polynomials with imaginary coefficients.
 ~~Elementary Polynomial integration~~
 ~~Integration of polynomials in rational form~~
 
-Integration of polynomials with radicals
+Integration of polynomials in radical form
 
 Integration of polynomials with complex trignometric expressions
 
@@ -428,6 +432,25 @@ symclo.core> u
 
 (+ (+ 7 (* 5 (** x 2))) (* 3 (** x 4)))
 
+;;; Incorrect degree! (should be 2, see you above)
+symclo.core> (util/degree-polynomial u '(** x 2))
+
+1
+
+;;; Correct degree!!
+symclo.core> (util/degree-polynomial (util/polynomial-expansion* u '(** x 2) 'x 't) 't)                                                                  
+
+2
+
+;;; Incorrect coefficent!! (should be 3, see equation u above)
+symclo.core> (util/coefficient-polynomial-gpe u '(** x 2) 2)                                                                                             
+
+0
+
+;;; Correct coefficient!
+symclo.core> (util/coefficient-polynomial-gpe (util/polynomial-expansion* u '(** x 2) 'x 't) 't 2) 
+
+3
 
 ```
 
@@ -436,12 +459,15 @@ symclo.core> u
 symclo.core> eq1
 
 (+ x (* 2 y))
+
 symclo.core> eq2
+
 (+ x (* -1 y))
+
+;;; result without back-substitution (soon to be implemented)
 symclo.core> (util/solve-linear-eqs #{eq1 eq2} #{'x 'y} [-1 0])
 
 ((+ (+ (/ -1 2) (* (/ 1 2) x)) y) (+ (/ -1 3) x))
-
 
 ```
 
