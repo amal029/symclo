@@ -6,6 +6,7 @@
 (require '[symclo.core :as simp])
 (require '[symclo.expand :as expand])
 
+(set! *assert* true)
 (declare G)
 (def third (comp first nnext))
 
@@ -282,6 +283,8 @@
   "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
   a multivariate GME" 
   [u v l] 
+  {:pre [(polynomial-gpe u (set l))
+         (monomial-gpe v (set l))]}
   (cond
    (= (simp/kind u) :sumop)
    (let [ops (simp/get-sum-operands (rest u))
@@ -307,3 +310,65 @@
             r (simp/simplify* (expand/expand* (list '- (list '* f v) r)))]
         (recur q r vl (G r vl l)))
       [q r])))
+
+(defn back-substitute [alist symbols _]
+  (let [nsymbols (reduce #(cons %2 %) '(1) (reverse symbols))
+        res (map (fn [row]
+                   (reduce #(simp/simplify* (list '+ % %2)) 
+                           (map #(list '* % %2) row nsymbols))) alist)]
+    res))
+
+#_(defn back-substitute [alist symbols leqs]
+  [leqs alist])
+
+(defn swap [alist i toswaprow]
+  (map-indexed #(if (= % i) toswaprow %2)))
+
+(defn solve-linear-eqs
+  "Solve linear equations using Gauss-Jordan elimination. eqs and
+  symbols and leqs are sets of linear equations on left of =, symbols,
+  and *vector* of values on right of =, respectively."
+  
+  [eqs symbols leqs]
+  
+  {:pre [(set? eqs) (set? symbols) (vector? leqs)
+         (every? #(= (degree-polynomial % symbols) 1) eqs)
+         (= (count leqs) (count eqs))]}
+  
+  ;; First make a 2-d Augmented array
+  (let
+      [alist (map (fn [eq] (map #(coefficient-polynomial-gpe eq % 1) symbols)) eqs)
+       alist (map-indexed #(reverse (cons (nth leqs %) (reverse %2))) alist)
+       ]
+    (loop [i 0 j 0
+           alist alist]
+      (cond
+       (not= (nth (nth alist i) j) 0)
+       ;; step-2a
+       (let [element (nth (nth alist i) j)
+             alist-current-row (map #(simp/simplify* (list '/ % element)) (nth alist i))
+             alist (map-indexed (fn [idx row] (if (> idx i)
+                                                (let [X (nth row j)
+                                                      acr (map #(simp/simplify* (list '* -1 X %)) alist-current-row)
+                                                      pa-to-add (map #(list % %2) acr row)]
+                                                  (map-indexed #(if (>= % j)
+                                                                  (simp/simplify* (list '+ (first %2) (second %2)))
+                                                                  (second %2)) pa-to-add))
+                                                row)) alist) 
+             alist (map-indexed #(if (= % i) alist-current-row %2) alist)
+             i (inc i) j (inc j)]
+         (if (and (< j (count (first alist))) (< i (count alist)))
+           (recur i j alist)
+           (back-substitute alist symbols leqs)))
+       :else 
+       ;; step-2b
+       (let [toswaprow (map-indexed (fn [idx row] (if (and (> idx i) (not= (nth row j) 0)) row nil)) alist)
+             toswaprow (first (filter (partial not= nil) toswaprow))]
+         (if (nil? toswaprow)
+           ;; step-2bi
+           (let [j (inc j)]
+             (if (and (< j (count (first alist))) (< i (count alist)))
+               (recur i j alist)
+               (back-substitute alist symbols leqs)))
+           ;; step-2bii
+           (recur i j (swap alist i toswaprow))))))))

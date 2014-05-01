@@ -409,9 +409,43 @@ symclo.core> (util/coefficient-polynomial-gpe u 'x (util/degree-polynomial u 'x)
 
 ```
 
+#### Polynomial division and expansion
+
+``` clojure 
+
+;;; Note this is univariate polynomial division
+symclo.core> (util/polynomial-division (simplify* '(- (** x 2) 1)) (simplify* '(- x 1)) 'x)
+
+[(+ 1 x) 0]
+
+symclo.core> (util/polynomial-division (simplify* '(+ (* 5 (** x 2)) (* 4 x) 1)) (simplify* '(+ (* 2 x) 3)) 'x)
+
+[(+ (/ -7 4) (* (/ 5 2) x)) (/ 25 4)]
+
+;;; Polynomial expansion is a generalization of substitution
+
+
+```
+
+#### Solve simulataneous linear equations
+``` clojure
+symclo.core> eq1
+
+(+ x (* 2 y))
+symclo.core> eq2
+(+ x (* -1 y))
+symclo.core> (util/solve-linear-eqs #{eq1 eq2} #{'x 'y} [-1 0])
+
+((+ (+ (/ -1 2) (* (/ 1 2) x)) y) (+ (/ -1 3) x))
+
+
+```
+
 ## License
 
 Copyright © 2014
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
+
+LocalWords:  simulataneous
