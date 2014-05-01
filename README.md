@@ -424,6 +424,10 @@ symclo.core> (util/polynomial-division (simplify* '(+ (* 5 (** x 2)) (* 4 x) 1))
 
 ;;; Polynomial expansion is a generalization of substitution
 
+symclo.core> u                                                                                                                                                              
+
+(+ (+ 7 (* 5 (** x 2))) (* 3 (** x 4)))
+
 
 ```
 
