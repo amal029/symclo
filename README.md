@@ -432,7 +432,7 @@ symclo.core> u
 
 (+ (+ 7 (* 5 (** x 2))) (* 3 (** x 4)))
 
-;;; Incorrect degree! (should be 2, see you above)
+;;; Incorrect degree! (should be 2, see equation u above)
 symclo.core> (util/degree-polynomial u '(** x 2))
 
 1
