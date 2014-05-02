@@ -254,7 +254,7 @@
          c (coefficient-monomial-gpe u (first l) m)]
      (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
 
-(defn mv-rec-polynomial-div
+(deftrace mv-rec-polynomial-div
   "Multivariate recursive structure based polynomial division." 
   [u v l]
   (cond
@@ -267,16 +267,31 @@
           q 0
           lcv (polynomial-lce v x)
           d [0 0]]
-     (if (or (not= (second d) 0) (>= m n))
-       (let [lcr (polynomial-lce r x)
+     (prn "m:" m)
+     (prn "n:" n)
+     (prn "lcv:" lcv)
+     (prn "X:" x)
+     (prn "V:" v)
+     (if (>= m n)
+       (let [lcr (simp/simplify* (polynomial-lce r x))
+             _ (prn "lcr:" lcr)
              d (mv-rec-polynomial-div lcr lcv (rest l))
+             _ (prn "d:" d)
              [q r m] (if (not= (second d) 0)
                        [q r m]
-                       [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
-                        (simp/simplify* (expand/expand* (list '- r (list '* v (first d) (list '** x (- m n)))))) ;r
-                        (degree-polynomial r x) ;m
-                        ])]
-         (recur x r m n q lcv d))
+                       (do 
+                         (prn "in the else branch updating q/r/m")
+                         (prn "XX:" x)
+                         [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
+                          (simp/simplify* (simp/simplify* (expand/expand* (list '- r (list '* v (first d) (list '** x (- m n))))))) ;r
+                          (degree-polynomial r x) ;m
+                          ]))]
+         (prn "q:" q)
+         (prn "r:" r)
+         (prn "m:" m)
+         (if (= (second d) 0) 
+           (recur x r m n q lcv d)
+           [(simp/simplify* (expand/expand* q)) r]))
        [(simp/simplify* (expand/expand* q)) r]))))
 
 (defn G 

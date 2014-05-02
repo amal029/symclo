@@ -481,7 +481,8 @@ symclo.core> r2
 
 symclo.core> (util/solve-linear-eqs #{`(~'= ~r1 4) `(~'= ~r2 0)} #{'x 'y}) 
 
-(x 1 y 2)
+(x (/ 4 3) y (/ 4 3))
+
 
 
 ;;; Building the list equation from expression
