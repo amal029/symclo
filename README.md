@@ -467,7 +467,7 @@ symclo.core> eq2
 (+ x (* -1 y))
 
 ;;; result
-symclo.core> (util/solve-linear-eqs #{eq1 eq2} #{'x 'y} [1 0])
+symclo.core> (util/solve-linear-eqs #{`(~'= ~eq1 1) `(~'= ~eq2 0)} #{'x 'y})
 
 (x (/ 1 3) y (/ 1 3))
 
@@ -479,20 +479,29 @@ symclo.core> r2
 
 (+ x (* -1 y))
 
-symclo.core> (util/solve-linear-eqs #{r1 r2} #{'x 'y} [4 -1]) 
+symclo.core> (util/solve-linear-eqs #{`(~'= ~r1 4) `(~'= ~r2 0)} #{'x 'y} [4 -1]) 
 
 (x 1 y 2)
 
+
+;;; Building the list equation from expression
+symclo.core> (def q (list '= (simplify* '(+ x y)) '(+ 2 z)))
+
+#'symclo.core/q
+
 symclo.core> q
 
-(+ x y)
+(= (+ x y) (+ 2 z))
+
+symclo.core> (def e (list '= (simplify* '(- x y)) '(+ 3 z)))
+
+#'symclo.core/e
 
 symclo.core> e
 
-(+ x (* -1 y))
+(= (+ x (* -1 y)) (+ 3 z))
 
-symclo.core> (util/solve-linear-eqs #{e q} #{'x 'y} ['(+ 2 z) '(+ 3 z)])
-
+symclo.core> (util/solve-linear-eqs #{e q} #{'x 'y})                                                                                                                        
 (x (+ (/ 5 2) z) y (/ -1 2))
 
 ```

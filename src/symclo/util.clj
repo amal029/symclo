@@ -254,7 +254,7 @@
          c (coefficient-monomial-gpe u (first l) m)]
      (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
 
-(defn mv-rec-polynomial-div 
+(defn mv-rec-polynomial-div
   "Multivariate recursive structure based polynomial division." 
   [u v l]
   (cond
@@ -318,7 +318,7 @@
       (if-not (empty? alist)
         (let [row (drop (- (count symbols) (count solns)) (last alist))
               ll (last row)
-              row (map #(simp/simplify* (list '* % %2)) (drop-last row) solns)
+              row (map #(simp/simplify* (list '* % %2)) (drop-last row) (reverse solns))
               solns (conj solns (simp/simplify* (list '* -1 (reduce #(simp/simplify* (list '+ % %2)) ll row))))]
           (recur solns (drop-last alist)))
         (interleave (reverse symbols) solns)))))
@@ -331,15 +331,15 @@
   symbols and leqs are sets of linear equations on left of =, symbols,
   and *vector* of values on right of =, respectively."
   
-  [eqs symbols leqs]
+  [eqs symbols]
   
-  {:pre [(set? eqs) (set? symbols) (vector? leqs)
-         (every? #(= (degree-polynomial % symbols) 1) eqs)
-         (= (count leqs) (count eqs))]}
+  {:pre [(set? eqs) (set? symbols) (every? #(= (first %) '=) eqs)
+         (every? #(= (degree-polynomial % symbols) 1) (map second eqs))]}
   
   ;; First make a 2-d Augmented array
   (let
-      [leqs (map #(simp/simplify* (list '* -1 %)) leqs)
+      [leqs (map #(simp/simplify* (list '* -1 %)) (map third eqs))
+       eqs (map second eqs)
        alist (map (fn [eq] (map #(coefficient-polynomial-gpe eq % 1) symbols)) eqs)
        alist (map-indexed #(reverse (cons (nth leqs %) (reverse %2))) alist)]
     (loop [i 0 j 0
