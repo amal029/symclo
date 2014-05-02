@@ -483,6 +483,18 @@ symclo.core> (util/solve-linear-eqs #{r1 r2} #{'x 'y} [4 -1])
 
 (x 1 y 2)
 
+symclo.core> q
+
+(+ x y)
+
+symclo.core> e
+
+(+ x (* -1 y))
+
+symclo.core> (util/solve-linear-eqs #{e q} #{'x 'y} ['(+ 2 z) '(+ 3 z)])
+
+(x (+ (/ 5 2) z) y (/ -1 2))
+
 ```
 
 ## License
