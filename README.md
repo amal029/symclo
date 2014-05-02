@@ -479,7 +479,7 @@ symclo.core> r2
 
 (+ x (* -1 y))
 
-symclo.core> (util/solve-linear-eqs #{`(~'= ~r1 4) `(~'= ~r2 0)} #{'x 'y} [4 -1]) 
+symclo.core> (util/solve-linear-eqs #{`(~'= ~r1 4) `(~'= ~r2 0)} #{'x 'y}) 
 
 (x 1 y 2)
 
