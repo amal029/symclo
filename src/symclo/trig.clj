@@ -241,31 +241,31 @@
    :else op))
 
 ;;; sum or diff of angles
-(defn tr10 [v]
-  (cond 
-   (= (trig-kind v) :sin)
-   (let [[_ x] v]
-     (let [x (simp/simplify* x)]
-       (cond
-        (= (simp/kind x) :sumop)
-        (let [[_ x y :as xx] x]
-          (if (util/is-addition? xx)
-            (simp/simplify* (list '+ (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y))))
-            (let [[_ _ y] y]
-                 (simp/simplify* (list '- (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y)))))))
-        :else v)))
-   (= (trig-kind v) :cos)
-   (let [[_ x] v]
-     (let [x (simp/simplify* x)]
-       (cond
-        (= (simp/kind x) :sumop)
-        (let [[_ x y :as xx] x]
-          (if (util/is-addition? xx)
-            (simp/simplify* (list '- (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y))))
-            (let [[_ _ y] y] 
-              (simp/simplify* (list '+ (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y)))))))
-        :else v)))
-   :else v))
+#_(defn tr10 [v]
+    (cond 
+     (= (trig-kind v) :sin)
+     (let [[_ x] v]
+       (let [x (simp/simplify* x)]
+         (cond
+          (= (simp/kind x) :sumop)
+          (let [[_ x y :as xx] x]
+            (if (util/is-addition? xx)
+              (simp/simplify* (list '+ (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y))))
+              (let [[_ _ y] y]
+                (simp/simplify* (list '- (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y)))))))
+          :else v)))
+     (= (trig-kind v) :cos)
+     (let [[_ x] v]
+       (let [x (simp/simplify* x)]
+         (cond
+          (= (simp/kind x) :sumop)
+          (let [[_ x y :as xx] x]
+            (if (util/is-addition? xx)
+              (simp/simplify* (list '- (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y))))
+              (let [[_ _ y] y] 
+                (simp/simplify* (list '+ (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y)))))))
+          :else v)))
+     :else v))
 
 
 ;;; double angles
@@ -333,20 +333,20 @@
    :else op))
 
 ;;; sum or difference of tan
-(defn tr12 [v]
-  (cond 
-   (= (trig-kind v) :tan)
-   (let [[_ x] v]
-     (let [x (simp/simplify* x)]
-       (cond
-        (= (simp/kind x) :sumop)
-        (let [[_ x y :as xx] x]
-          (if (util/is-addition? xx)
-            (simp/simplify* (list '/ (list '+ (list 'tan x) (list 'tan y)) (list '- 1 (list '* (list 'tan x) (list 'tan y)))))
-            (let [[_ _ y] y]
+#_(defn tr12 [v]
+    (cond 
+     (= (trig-kind v) :tan)
+     (let [[_ x] v]
+       (let [x (simp/simplify* x)]
+         (cond
+          (= (simp/kind x) :sumop)
+          (let [[_ x y :as xx] x]
+            (if (util/is-addition? xx)
+              (simp/simplify* (list '/ (list '+ (list 'tan x) (list 'tan y)) (list '- 1 (list '* (list 'tan x) (list 'tan y)))))
+              (let [[_ _ y] y]
                 (simp/simplify* (list '/ (list '- (list 'tan x) (list 'tan y)) (list '+ 1 (list '* (list 'tan x) (list 'tan y))))))))
-        :else v)))
-   :else v))
+          :else v)))
+     :else v))
 
 
 ;;; product of tan or cot

@@ -466,10 +466,22 @@ symclo.core> eq2
 
 (+ x (* -1 y))
 
-;;; result without back-substitution (soon to be implemented)
-symclo.core> (util/solve-linear-eqs #{eq1 eq2} #{'x 'y} [-1 0])
+;;; result
+symclo.core> (util/solve-linear-eqs #{eq1 eq2} #{'x 'y} [1 0])
 
-((+ (+ (/ -1 2) (* (/ 1 2) x)) y) (+ (/ -1 3) x))
+(x (/ 1 3) y (/ 1 3))
+
+symclo.core> r1 
+
+(+ (* 2 x) y)
+
+symclo.core> r2
+
+(+ x (* -1 y))
+
+symclo.core> (util/solve-linear-eqs #{r1 r2} #{'x 'y} [4 -1]) 
+
+(x 1 y 2)
 
 ```
 

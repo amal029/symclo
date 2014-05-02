@@ -10,56 +10,56 @@
 (declare G)
 (def third (comp first nnext))
 
-(defn is-addition? [[_ x y :as v]]
-  (cond
-   (= (simp/kind v) :sumop)
-   (cond
-    (not (or (= (simp/kind x) :prodop) (= (simp/kind y) :prodop))) true
-    (and (= (simp/kind x) :prodop) (= (simp/kind y) :prodop))
-    (let [[_ x z] x
-          [_ y z] y]
-      (cond
-       (and (not (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))
-            (not (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))) 
-       true
-       ;; x is a number > 0 and y is not a number or fraction then
-       (and (or (= (simp/kind x) :number)) (> x 0) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop))) true
-       ;; x is a fraction > 0 and y is not a number or fraction then
-       (and (or (= (simp/kind x) :fracop)) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))
-       (let [x (/ (let [[_ n _] x]) (let [[_ _ d] x]))]
-         (> x 0))
-       ;; y is a number > 0 and x is not a number or fraction then
-       (and (or (= (simp/kind y) :number)) (> y 0) (or (= (simp/kind x) :number) (= (simp/kind x) :fracop))) true
-       ;; y is a fraction > 0 and x is not a number or fraction then
-       (and (or (= (simp/kind y) :fracop)) (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))
-       (let [y (/ (let [[_ n _] y]) (let [[_ _ d] y]))]
-         (> y 0))))
-    ;; x is a product and y is not a product
-    (and (= (simp/kind x) :prodop) (not (= (simp/kind y) :prodop)))
-    (let [[_ x z] x]
-      (cond
-       (and (not (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))) 
-       true
-       ;; x is a number > 0 and y is not a number or fraction then
-       (and (or (= (simp/kind x) :number)) (> x 0)) true
-       ;; x is a fraction > 0 and y is not a number or fraction then
-       (and (or (= (simp/kind x) :fracop)) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))
-       (let [x (/ (let [[_ n _] x]) (let [[_ _ d] x]))]
-         (> x 0))))
-    ;; y is a product and x is not a product
-    (and (= (simp/kind y) :prodop) (not (= (simp/kind x) :prodop)))
-    (let [[_ y z] y]
-      (cond
-       (and (not (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))) 
-       true
-       ;; y is a number > 0 and x is not a number or fraction then
-       (and (or (= (simp/kind y) :number)) (> y 0)) true
-       ;; y is a fraction > 0 and x is not a number or fraction then
-       (and (or (= (simp/kind y) :fracop)))
-       (let [y (/ (let [[_ n _] y]) (let [[_ _ d] y]))]
-         (> y 0))))
-    :else false)
-   :else false))
+#_(defn is-addition? [[_ x y :as v]]
+    (cond
+     (= (simp/kind v) :sumop)
+     (cond
+      (not (or (= (simp/kind x) :prodop) (= (simp/kind y) :prodop))) true
+      (and (= (simp/kind x) :prodop) (= (simp/kind y) :prodop))
+      (let [[_ x z] x
+            [_ y z] y]
+        (cond
+         (and (not (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))
+              (not (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))) 
+         true
+         ;; x is a number > 0 and y is not a number or fraction then
+         (and (or (= (simp/kind x) :number)) (> x 0) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop))) true
+         ;; x is a fraction > 0 and y is not a number or fraction then
+         (and (or (= (simp/kind x) :fracop)) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))
+         (let [x (/ (let [[_ n _] x]) (let [[_ _ d] x]))]
+           (> x 0))
+         ;; y is a number > 0 and x is not a number or fraction then
+         (and (or (= (simp/kind y) :number)) (> y 0) (or (= (simp/kind x) :number) (= (simp/kind x) :fracop))) true
+         ;; y is a fraction > 0 and x is not a number or fraction then
+         (and (or (= (simp/kind y) :fracop)) (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))
+         (let [y (/ (let [[_ n _] y]) (let [[_ _ d] y]))]
+           (> y 0))))
+      ;; x is a product and y is not a product
+      (and (= (simp/kind x) :prodop) (not (= (simp/kind y) :prodop)))
+      (let [[_ x z] x]
+        (cond
+         (and (not (or (= (simp/kind x) :number) (= (simp/kind x) :fracop)))) 
+         true
+         ;; x is a number > 0 and y is not a number or fraction then
+         (and (or (= (simp/kind x) :number)) (> x 0)) true
+         ;; x is a fraction > 0 and y is not a number or fraction then
+         (and (or (= (simp/kind x) :fracop)) (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))
+         (let [x (/ (let [[_ n _] x]) (let [[_ _ d] x]))]
+           (> x 0))))
+      ;; y is a product and x is not a product
+      (and (= (simp/kind y) :prodop) (not (= (simp/kind x) :prodop)))
+      (let [[_ y z] y]
+        (cond
+         (and (not (or (= (simp/kind y) :number) (= (simp/kind y) :fracop)))) 
+         true
+         ;; y is a number > 0 and x is not a number or fraction then
+         (and (or (= (simp/kind y) :number)) (> y 0)) true
+         ;; y is a fraction > 0 and x is not a number or fraction then
+         (and (or (= (simp/kind y) :fracop)))
+         (let [y (/ (let [[_ n _] y]) (let [[_ _ d] y]))]
+           (> y 0))))
+      :else false)
+     :else false))
 
 
 ;;; Adhering to the definition of simplification operator in J. Cohen text
@@ -311,15 +311,17 @@
         (recur q r vl (G r vl l)))
       [q r])))
 
-(defn back-substitute [alist symbols _]
-  (let [nsymbols (reduce #(cons %2 %) '(1) (reverse symbols))
-        res (map (fn [row]
-                   (reduce #(simp/simplify* (list '+ % %2)) 
-                           (map #(list '* % %2) row nsymbols))) alist)]
-    res))
-
-#_(defn back-substitute [alist symbols leqs]
-  [leqs alist])
+(defn back-substitute [alist symbols]
+  (let [solns [(simp/simplify* (list '* -1 (last (last alist))))]]
+    (loop [solns solns
+           alist (drop-last alist)]
+      (if-not (empty? alist)
+        (let [row (drop (- (count symbols) (count solns)) (last alist))
+              ll (last row)
+              row (map #(simp/simplify* (list '* % %2)) (drop-last row) solns)
+              solns (conj solns (simp/simplify* (list '* -1 (reduce #(simp/simplify* (list '+ % %2)) ll row))))]
+          (recur solns (drop-last alist)))
+        (interleave (reverse symbols) solns)))))
 
 (defn swap [alist i toswaprow]
   (map-indexed #(if (= % i) toswaprow %2)))
@@ -337,9 +339,9 @@
   
   ;; First make a 2-d Augmented array
   (let
-      [alist (map (fn [eq] (map #(coefficient-polynomial-gpe eq % 1) symbols)) eqs)
-       alist (map-indexed #(reverse (cons (nth leqs %) (reverse %2))) alist)
-       ]
+      [leqs (map #(simp/simplify* (list '* -1 %)) leqs)
+       alist (map (fn [eq] (map #(coefficient-polynomial-gpe eq % 1) symbols)) eqs)
+       alist (map-indexed #(reverse (cons (nth leqs %) (reverse %2))) alist)]
     (loop [i 0 j 0
            alist alist]
       (cond
@@ -359,7 +361,7 @@
              i (inc i) j (inc j)]
          (if (and (< j (count (first alist))) (< i (count alist)))
            (recur i j alist)
-           (back-substitute alist symbols leqs)))
+           (back-substitute alist symbols)))
        :else 
        ;; step-2b
        (let [toswaprow (map-indexed (fn [idx row] (if (and (> idx i) (not= (nth row j) 0)) row nil)) alist)
@@ -369,6 +371,6 @@
            (let [j (inc j)]
              (if (and (< j (count (first alist))) (< i (count alist)))
                (recur i j alist)
-               (back-substitute alist symbols leqs)))
+               (back-substitute alist symbols)))
            ;; step-2bii
            (recur i j (swap alist i toswaprow))))))))
