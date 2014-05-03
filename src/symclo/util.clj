@@ -291,7 +291,7 @@
    (= (simp/kind u) :sumop)
    (let [ops (simp/get-sum-operands (rest u))
          _ (prn "ops:" ops)
-         ;; FIXME!!
+         ;; FIXME!
          res (filter #(= 0 (second %)) (map #(G % v l) ops))
          res (map first res)
          _ (prn "res:" res)
