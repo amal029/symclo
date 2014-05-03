@@ -290,8 +290,6 @@
   (cond
    (= (simp/kind u) :sumop)
    (let [ops (simp/get-sum-operands (rest u))
-         _ (prn "ops:" ops)
-         ;; FIXME!
          res (filter #(= 0 (second %)) (map #(mv-rec-polynomial-div % v l) ops))]
      (if (empty? res)
        0

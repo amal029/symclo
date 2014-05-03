@@ -26,7 +26,7 @@ Univariate Polynomial expansion
 
 Simultaneous linear equation solver
 
-Multivariate Polynomial division (untested)
+Multivariate Polynomial division
 
 Multivariate Polynomial expansion (untested)
 
@@ -504,6 +504,34 @@ symclo.core> e
 
 symclo.core> (util/solve-linear-eqs #{e q} #{'x 'y})                                                                                                                        
 (x (+ (/ 5 2) z) y (/ -1 2))
+
+```
+#### Multivariate polynomial division and expansion
+
+``` clojure
+
+symclo.core> (def x (simplify* '(+ (* 2 (** x 2) y) (* 3 (** x 2)) (* 4 x y) (* 5 x) (* 6 y) 7)))
+
+#'symclo.core/x
+
+symclo.core> x
+
+(+ (+ (+ (+ (+ 7 (* 5 x)) (* 3 (** x 2))) (* 6 y)) (* (* 4 x) y)) (* (* 2 (** x 2)) y))
+
+symclo.core> (def v (simplify* '(* x y)))
+
+#'symclo.core/v
+
+symclo.core> v
+
+(* x y)
+
+;;; The first value is the quotient and second is the remainder
+;;; multivariante polynomial division uses monomial based division 
+;;; internally
+symclo.core>  (util/mv-polynomial-division x v ['x 'y])
+
+[(+ 4 (* 2 x)) (+ (+ (+ 7 (* 5 x)) (* 3 (** x 2))) (* 6 y))]
 
 ```
 
