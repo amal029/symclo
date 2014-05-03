@@ -430,7 +430,8 @@
    (and (= (kind u) :prodop) (= (kind v) :prodop)) 
    (let 
        [cu (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest u)))
-        ou (simplify-product (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest u))))
+        ou (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest u)))
+        ou (if-not (= 1 (count ou)) (simplify-product ou) (first ou))
         cv (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest v)))
         cu (cond 
             (empty? cu) 1
@@ -440,25 +441,6 @@
             (empty? cv) 1
             (= (count cv) 1) (first cv)
             :else (simplify-rne (list* '* cv)))
-        ]
-       #_[
-        [_ cu ou] u
-        [_ cv ov] v
-        [cu ou] 
-        (cond
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (not (= (kind ou) :prodop))) 
-              (or (= (kind cu) :number) (= (kind cu) :fracop))) [cu ou]
-         (and (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (= (kind ou) :prodop)) 
-              (or (= (kind cu) :number) (= (kind cu) :fracop))) 
-         [(simplify-rne (list '* (second ou) cu)) (first (nnext ou))]
-         :else (throw (Throwable. (str "Wrong type: " cu))))
-        cv
-        (cond
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (not (= (kind ov) :prodop))) 
-              (or (= (kind cv) :number) (= (kind cv) :fracop))) cv 
-         (and (and (not (or (= (kind ov) :number) (= (kind ov) :fracop))) (= (kind ov) :prodop)) 
-              (or (= (kind cv) :number) (= (kind cv) :fracop))) (simplify-rne (list '* (second ov) cv)) 
-         :else (throw (Throwable. (str "Wrong type: " cv))))
         ]
      [(simplify-rne (list '+ cu cv)) ou])
    (= (kind u) :prodop) 

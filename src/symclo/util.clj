@@ -212,9 +212,9 @@
       (let [lcr (polynomial-lce r x)
             s (simp/simplify* (list '/ lcr lcv))
             q (simp/simplify* (list '+ q (list '* s (list '** x (list '- m n)))))
-            r (simp/simplify* (expand/expand* (list '- (list '- r (list '* (list '** x m) lcr))
-                                                    (list '* (list '* s (list '** x (list '- m n)))
-                                                          (list '- v (list '* (list '** x n) lcv))))))
+            r (simp/simplify* (expand/expand* (simp/simplify* (list '- (list '- r (list '* (list '** x m) lcr))
+                                                                    (list '* (list '* s (list '** x (list '- m n)))
+                                                                          (list '- v (list '* (list '** x n) lcv)))))))
             m (degree-polynomial r x)]
         (recur q r m n lcv))
       ;; else
@@ -235,7 +235,7 @@
   (if (= u 0) 
     0
     (let [d (polynomial-division u v x)]
-      (simp/simplify* (expand/expand* (list '+ (second d) (list '* t (polynomial-expansion* (first d) v x t))))))))
+      (simp/simplify* (expand/expand* (simp/simplify* (list '+ (second d) (list '* t (polynomial-expansion* (first d) v x t)))))))))
 
 
 (defn polynomial-expansion
@@ -258,7 +258,7 @@
   "Multivariate recursive structure based polynomial division." 
   [u v l]
   (cond
-   (empty? l) [(simp/simplify* (list '/ u v)) 0]
+   (empty? l) [(simp/simplify* (list '* u (list '** v -1))) 0]
    :else
    (loop [x (first l)
           r u
@@ -267,32 +267,19 @@
           q 0
           lcv (polynomial-lce v x)
           d [0 0]]
-     (prn "m:" m)
-     (prn "n:" n)
-     (prn "lcv:" lcv)
-     (prn "X:" x)
-     (prn "V:" v)
      (if (and (not= r 0) (>= m n))
        (let [lcr (simp/simplify* (polynomial-lce r x))
-             _ (prn "lcr:" lcr)
              d (mv-rec-polynomial-div lcr lcv (rest l))
-             _ (prn "d:" d)
              [q r m] (if (not= (second d) 0)
                        [q r m]
-                       (do 
-                         (prn "in the else branch updating q/r/m")
-                         (prn "XX:" x)
-                         [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
-                          (simp/simplify* (simp/simplify* (expand/expand* (list '+ r (list '* -1 v (first d) (list '** x (- m n))))))) ;r
-                          (degree-polynomial r x) ;m
-                          ]))]
-         (prn "q:" q)
-         (prn "r:" r)
-         (prn "m:" m)
+                       [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
+                        (simp/simplify* (expand/expand* (simp/simplify* (list '+ r (list '* -1 v (first d) (list '** x (- m n))))))) ;r
+                        (degree-polynomial r x) ;m
+                        ])]
          (if (and (not= r 0) (= (second d) 0)) 
            (recur x r m n q lcv d)
-           [(simp/simplify* (expand/expand* q)) r]))
-       [(simp/simplify* (expand/expand* q)) r]))))
+           [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))
+       [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))))
 
 (deftrace G 
   "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
@@ -303,14 +290,21 @@
   (cond
    (= (simp/kind u) :sumop)
    (let [ops (simp/get-sum-operands (rest u))
-         res (filter #(= 0 (second %)) (map #(G % v l) ops))]
-     (if (empty? res) 
+         _ (prn "ops:" ops)
+         ;; FIXME!!
+         res (filter #(= 0 (second %)) (map #(G % v l) ops))
+         res (map first res)
+         _ (prn "res:" res)
+         ]
+     (if (empty? res)
        0
-       (simp/simplify* (reduce #(list '+ (first %) (first %2)) res))))
+       (if (> (count res) 1)
+         (simp/simplify* (reduce #(list '+ (first %) (first %2)) res))
+         (first res))))
    :else
    (mv-rec-polynomial-div u v l)))
 
-(deftrace mv-polynomial-division 
+(deftrace mv-polynomial-division
   "Multivariate polynomial division. u gets divided by v using monomial
   division. l is the list of symbols, (first l) is the main
   symbol. Returns a 2 vector, first is the quotient and second is the
@@ -320,11 +314,10 @@
          r u
          vl (lm v l)
          f (G r vl l)]
-    (if (not= f 0)
-      (let [q (simp/simplify* (list '+ q f))
-            r (simp/simplify* (simp/simplify* (expand/expand* (list '+ r (list '* -1 f v)))))]
-        (recur q r vl (G r vl l)))
-      [q r])))
+    (let [q (simp/simplify* (list '+ q f))
+          r (simp/simplify* (expand/expand* (simp/simplify* (list '+ r (list '* -1 f v)))))
+          f (G r vl l)]
+      (if-not (= 0 f) (recur q r vl f) [q r]))))
 
 (defn back-substitute [alist symbols]
   (let [solns [(simp/simplify* (list '* -1 (last (last alist))))]]
