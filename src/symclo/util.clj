@@ -254,7 +254,7 @@
          c (coefficient-polynomial-gpe u (first l) m)]
      (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
 
-(deftrace mv-rec-polynomial-div
+(defn mv-rec-polynomial-div
   "Multivariate recursive structure based polynomial division." 
   [u v l]
   (cond
@@ -273,7 +273,7 @@
              [q r m] (if (not= (second d) 0)
                        [q r m]
                        [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
-                        (simp/simplify* (expand/expand* (simp/simplify* (list '+ r (list '* -1 v (first d) (list '** x (- m n))))))) ;r
+                        (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* v (first d) (list '** x (- m n))))))) ;r
                         (degree-polynomial r x) ;m
                         ])]
          (if (and (not= r 0) (= (second d) 0)) 
@@ -281,7 +281,7 @@
            [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))
        [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))))
 
-(deftrace G 
+(defn G 
   "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
   a multivariate GME" 
   [u v l] 
@@ -292,19 +292,15 @@
    (let [ops (simp/get-sum-operands (rest u))
          _ (prn "ops:" ops)
          ;; FIXME!
-         res (filter #(= 0 (second %)) (map #(G % v l) ops))
-         res (map first res)
-         _ (prn "res:" res)
-         ]
+         res (filter #(= 0 (second %)) (map #(mv-rec-polynomial-div % v l) ops))]
      (if (empty? res)
        0
        (if (> (count res) 1)
          (simp/simplify* (reduce #(list '+ (first %) (first %2)) res))
          (first res))))
-   :else
-   (mv-rec-polynomial-div u v l)))
+   :else (throw (Throwable. (str "Wrong!!" u)))))
 
-(deftrace mv-polynomial-division
+(defn mv-polynomial-division
   "Multivariate polynomial division. u gets divided by v using monomial
   division. l is the list of symbols, (first l) is the main
   symbol. Returns a 2 vector, first is the quotient and second is the
@@ -315,7 +311,7 @@
          vl (lm v l)
          f (G r vl l)]
     (let [q (simp/simplify* (list '+ q f))
-          r (simp/simplify* (expand/expand* (simp/simplify* (list '+ r (list '* -1 f v)))))
+          r (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* f v)))))
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
 

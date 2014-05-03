@@ -396,11 +396,11 @@
         cu (cond 
             (empty? cu) 1
             (= (count cu) 1) (first cu)
-            :else (simplify-rne (list* '* cu)))
+            :else (simplify-rne (reduce #(list '* % %2) cu)))
         cv (cond 
             (empty? cv) 1
             (= (count cv) 1) (first cv)
-            :else (simplify-rne (list* '* cv)))]
+            :else (simplify-rne (reduce #(list '* % %2) cv)))]
      (if (and (= ou ov)
               (or (= (kind cu) :fracop) (= (kind cu) :number))
               (or (= (kind cv) :fracop) (= (kind cv) :number)))
@@ -436,11 +436,11 @@
         cu (cond 
             (empty? cu) 1
             (= (count cu) 1) (first cu)
-            :else (simplify-rne (list* '* cu)))
+            :else (simplify-rne (reduce #(list '* % %2) cu)))
         cv (cond 
             (empty? cv) 1
             (= (count cv) 1) (first cv)
-            :else (simplify-rne (list* '* cv)))
+            :else (simplify-rne (reduce #(list '* % %2) cv)))
         ]
      [(simplify-rne (list '+ cu cv)) ou])
    (= (kind u) :prodop) 
@@ -590,8 +590,8 @@
          [_] (let [v (map-indexed #(if-not (= % 0) (simplify* %2) %2) u)]
                (match [(kind v)]
                       [:powop] (simplify-power v)
-                      [:prodop] (simplify-product (rest v))
-                      [:sumop] (simplify-sum (rest v))
+                      [:prodop] (simplify-product (get-prod-operands (rest v)))
+                      [:sumop] (simplify-sum (get-sum-operands (rest v)))
                       [:quotop] (simplify-quotient v)
                       [:diffop] (simplify-diff (rest v))
                       [:factop] (simplify-factorial v)
