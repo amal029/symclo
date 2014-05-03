@@ -251,7 +251,7 @@
    (empty? l) u
    :else
    (let [m (degree-polynomial u (first l))
-         c (coefficient-monomial-gpe u (first l) m)]
+         c (coefficient-polynomial-gpe u (first l) m)]
      (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
 
 (deftrace mv-rec-polynomial-div
@@ -272,7 +272,7 @@
      (prn "lcv:" lcv)
      (prn "X:" x)
      (prn "V:" v)
-     (if (>= m n)
+     (if (and (not= r 0) (>= m n))
        (let [lcr (simp/simplify* (polynomial-lce r x))
              _ (prn "lcr:" lcr)
              d (mv-rec-polynomial-div lcr lcv (rest l))
@@ -283,18 +283,18 @@
                          (prn "in the else branch updating q/r/m")
                          (prn "XX:" x)
                          [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
-                          (simp/simplify* (simp/simplify* (expand/expand* (list '- r (list '* v (first d) (list '** x (- m n))))))) ;r
+                          (simp/simplify* (simp/simplify* (expand/expand* (list '+ r (list '* -1 v (first d) (list '** x (- m n))))))) ;r
                           (degree-polynomial r x) ;m
                           ]))]
          (prn "q:" q)
          (prn "r:" r)
          (prn "m:" m)
-         (if (= (second d) 0) 
+         (if (and (not= r 0) (= (second d) 0)) 
            (recur x r m n q lcv d)
            [(simp/simplify* (expand/expand* q)) r]))
        [(simp/simplify* (expand/expand* q)) r]))))
 
-(defn G 
+(deftrace G 
   "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
   a multivariate GME" 
   [u v l] 
@@ -310,7 +310,7 @@
    :else
    (mv-rec-polynomial-div u v l)))
 
-(defn mv-polynomial-division 
+(deftrace mv-polynomial-division 
   "Multivariate polynomial division. u gets divided by v using monomial
   division. l is the list of symbols, (first l) is the main
   symbol. Returns a 2 vector, first is the quotient and second is the
@@ -322,7 +322,7 @@
          f (G r vl l)]
     (if (not= f 0)
       (let [q (simp/simplify* (list '+ q f))
-            r (simp/simplify* (expand/expand* (list '- (list '* f v) r)))]
+            r (simp/simplify* (simp/simplify* (expand/expand* (list '+ r (list '* -1 f v)))))]
         (recur q r vl (G r vl l)))
       [q r])))
 

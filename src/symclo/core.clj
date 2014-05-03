@@ -387,12 +387,21 @@
   (cond
    (and (= (exponent v) (exponent u)) (= (base v) (base u))) true
    (and (and (= (kind u) :prodop) (= (kind v) :prodop))
-        (and (= (count (rest u)) 2))
         (and (= (count (rest u))) (= (count (rest v)))))
    (let
-       [[_ cu ou] u
-        [_ cv ov] v]
-     (if (and (can-do? ou ov)
+       [cu (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest u)))
+        ou (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest u)))
+        cv (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest v)))
+        ov (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest v)))
+        cu (cond 
+            (empty? cu) 1
+            (= (count cu) 1) (first cu)
+            :else (simplify-rne (list* '* cu)))
+        cv (cond 
+            (empty? cv) 1
+            (= (count cv) 1) (first cv)
+            :else (simplify-rne (list* '* cv)))]
+     (if (and (= ou ov)
               (or (= (kind cu) :fracop) (= (kind cu) :number))
               (or (= (kind cv) :fracop) (= (kind cv) :number)))
        true false))
@@ -420,7 +429,19 @@
   (cond 
    (and (= (kind u) :prodop) (= (kind v) :prodop)) 
    (let 
-       [
+       [cu (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest u)))
+        ou (simplify-product (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest u))))
+        cv (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest v)))
+        cu (cond 
+            (empty? cu) 1
+            (= (count cu) 1) (first cu)
+            :else (simplify-rne (list* '* cu)))
+        cv (cond 
+            (empty? cv) 1
+            (= (count cv) 1) (first cv)
+            :else (simplify-rne (list* '* cv)))
+        ]
+       #_[
         [_ cu ou] u
         [_ cv ov] v
         [cu ou] 
@@ -539,21 +560,32 @@
            (cond
             (= (count v) 1) (first v)
             (= (count v) 0) 1
-            :else (cond 
-                   (or (= (kind (first v)) :number)(= (kind (first v)) :fracop))
-                   (let [
-                         non-sum (reduce #(list '* % %2) (filter #(not (= (kind %) :sumop)) v))
-                         sum (filter #(= (kind %) :sumop) v)
-                         res (map #(cond
-                                    (= (kind %) :sumop) (let [[_ x y] %] (list '+ (simplify-product (list (first v) x)) 
-                                                                               (simplify-product (list (first v) y))))
-                                    :else %) sum)
-                         res (if-not (empty? res) (reduce #(list '* % %2) res))]
-                     (cond
-                      (and (not (= non-sum (first v))) (not (= (count res) 0))) (list '* non-sum res)
-                      (not (= (count res) 0)) res
-                      :else non-sum))
-                   :else (reduce #(list '* % %2) v))))))
+            :else 
+            (let 
+                [bv (vals (group-by base v))
+                 bv (filter #(and (not= (base (first %)) 'UNDEFINED) (> (count %) 1)) bv)
+                 nv (filter #(not (some (partial = %) (reduce into [] bv))) v)
+                 ;; now solve the powers that be
+                 bv (mapcat #(let [s (simplify-sum (map exponent %))
+                                   p (simplify-power (list '** (base (first %)) s))] (list p)) bv)
+                 ;; dirty hack!! FIXME
+                 lv (concat nv bv)
+                 v (if-not (= lv v) (simplify-product-rec lv) lv)]
+                (cond 
+                 (or (= (kind (first v)) :number)(= (kind (first v)) :fracop))
+                 (let [
+                       non-sum (reduce #(list '* % %2) (filter #(not (= (kind %) :sumop)) v))
+                       sum (filter #(= (kind %) :sumop) v)
+                       res (map #(cond
+                                  (= (kind %) :sumop) (let [[_ x y] %] (list '+ (simplify-product (list (first v) x)) 
+                                                                             (simplify-product (list (first v) y))))
+                                  :else %) sum)
+                       res (if-not (empty? res) (reduce #(list '* % %2) res))]
+                   (cond
+                    (and (not (= non-sum (first v))) (not (= (count res) 0))) (list '* non-sum res)
+                    (not (= (count res) 0)) res
+                    :else non-sum))
+                 :else (reduce #(list '* % %2) v)))))))
 
 ;;; simplify-sum
 (defn simplify-sum [u]
