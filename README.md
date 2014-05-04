@@ -2,6 +2,9 @@
 
 A Clojure library for computer algebra systems a la, MAPEL, MAXIMA, MATHEMATICA,...
 
+## API
+http://amal029.github.io/symclo/index.html
+
 ## Current status
 
 Simplification of rational polynomials

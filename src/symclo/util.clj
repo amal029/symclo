@@ -334,7 +334,6 @@
   (def q (list '= (simplify* '(+ x y)) '(+ 2 z)))
   (util/solve-linear-eqs #{e q} #{'x 'y})"
   
-  
   [eqs symbols]
   
   {:pre [(set? eqs) (set? symbols) (every? #(= (first %) '=) eqs)
