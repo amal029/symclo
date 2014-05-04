@@ -328,8 +328,12 @@
 
 (defn solve-linear-eqs
   "Solve linear equations using Gauss-Jordan elimination. eqs and
-  symbols and leqs are sets of linear equations on left of =, symbols,
-  and *vector* of values on right of =, respectively."
+  symbols are sets of linear equations with their symbols,
+  respectively. Example: 
+  (def e (list '= (simplify* '(- x y)) '(+ 3 z))) 
+  (def q (list '= (simplify* '(+ x y)) '(+ 2 z)))
+  (util/solve-linear-eqs #{e q} #{'x 'y})"
+  
   
   [eqs symbols]
   
