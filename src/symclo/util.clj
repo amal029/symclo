@@ -293,10 +293,8 @@
          res (filter #(= 0 (second %)) (map #(mv-rec-polynomial-div % v l) ops))]
      (if (empty? res)
        0
-       (if (> (count res) 1)
-         (simp/simplify* (reduce #(list '+ (first %) (first %2)) res))
-         (first res))))
-   :else (throw (Throwable. (str "Wrong!!" u)))))
+       (simp/simplify* (reduce #(list '+ % (first %2)) 0 res))))
+   :else (first (mv-rec-polynomial-div u v l))))
 
 (defn mv-polynomial-division
   "Multivariate polynomial division. u gets divided by v using monomial

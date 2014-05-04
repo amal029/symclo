@@ -554,7 +554,9 @@
                  lv (concat nv bv)
                  v (if-not (= lv v) (simplify-product-rec lv) lv)]
                 (cond 
-                 (or (= (kind (first v)) :number)(= (kind (first v)) :fracop))
+                 (and 
+                  (= 0 (count (filter #(and (not= % (first v)) (not (= (kind %) :sumop))) v)))
+                  (or (= (kind (first v)) :number)(= (kind (first v)) :fracop)))
                  (let [
                        non-sum (reduce #(list '* % %2) (filter #(not (= (kind %) :sumop)) v))
                        sum (filter #(= (kind %) :sumop) v)
