@@ -95,7 +95,10 @@
    :else
    (cons (first f) (map #(substitute % x y) (rest f)))))
 
-(defn free-of [u x]
+(defn free-of 
+  "Expression u is free-of expression x"
+  
+  [u x]
   (not (some (partial = x) (complete-sub-expression u))))
 
 (defn- monomial-gpe*
