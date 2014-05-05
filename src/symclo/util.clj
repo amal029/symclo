@@ -8,7 +8,7 @@
 
 (set! *assert* true)
 (declare G)
-(def third (comp first nnext))
+(def ^:private third (comp first nnext))
 
 #_(defn is-addition? [[_ x y :as v]]
     (cond
@@ -76,7 +76,10 @@
             :else u)]
      (reduce #(into (complete-sub-expression %2) %) (list u) (rest u)))))
 
-(defn substitute [f x y]
+(defn substitute 
+  "Substitue expression x with y in expression f."
+  
+  [f x y]
   (cond
    (= (simp/simplify* f) (simp/simplify* x)) (simp/simplify* y)
    (or (= (simp/kind f) :fracop) (= (simp/kind f) :symbol) (= (simp/kind f) :number)) 
@@ -340,7 +343,7 @@
           (recur solns (drop-last alist)))
         (interleave (reverse symbols) solns)))))
 
-(defn swap [alist i toswaprow]
+(defn- swap [alist i toswaprow]
   (map-indexed #(if (= % i) toswaprow %2)))
 
 (defn solve-linear-eqs
