@@ -10,8 +10,8 @@
 (defn- third [x] (first (nnext x)))
 
 (defn deriv* 
-  "u is the function, x is the symbol against which derivative needs
-  to be done" 
+  "u is the function, x is the symbol against which derivative needs to
+  be done. Call simplify* before and after deriviation."  
   [u x]
   (if (= (symbol? x))
     (match [(simp/kind u)]
@@ -33,5 +33,8 @@
                 :else (list '%deriv u x)))
     (list '%deriv u x)))
 
-(defmacro deriv [arg sym]
+(defmacro deriv 
+  "Calls deriv* on arg w.r.t sym. autosimplification is implicit."
+  
+  [arg sym]
   `(simp/simplify* (deriv* (simp/simplify* '~arg) '~sym)))

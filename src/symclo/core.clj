@@ -37,7 +37,10 @@
    :else :function))
 
 ;;; The type of the number or operator?
-(defn kind [u]
+(defn kind 
+  "Gives the kind of expression u. keyword."
+  
+  [u]
   (cond 
    (integer? u) :number
    (symbol? u) :symbol
@@ -140,7 +143,11 @@
          [:powop] (let [[_ x y] u] (evaluate-power (simplify-rne-rec x) (simplify-rne-rec y)))))
 
 ;;; The SIMPLIFY_RNE function
-(defn simplify-rne [u]
+(defn simplify-rne 
+  "Simplifies a rational number expression (rne) u. Uses arbitary
+   precision."
+  
+  [u]
   (let [v (simplify-rne-rec u)]
     (simplify-rational-number v)))
 
@@ -183,6 +190,8 @@
   (simplify-product (list n (simplify-power (list '** d -1)))))
 
 (defn factorial
+  "The factorial function with an accumulator."
+  
   ([n]                    ; when only one argument is passed in
      (factorial n 1))
   ([n acc]                ; when two arguments are passed in
@@ -199,7 +208,10 @@
   u)
 
 ;;; the base
-(defn base [x]
+(defn base
+  "Gives the base of an expression"
+  
+  [x]
   (match [(kind x)]
          [:symbol] x
          [:prodop] x
@@ -210,7 +222,10 @@
          [:fracop] 'UNDEFINED
          [:function] x))
 
-(defn exponent [x]
+(defn exponent 
+  "Gives the exponent of an expression"
+
+  [x]
   (match [(kind x)]
          [:symbol] 1
          [:prodop] 1
@@ -383,16 +398,17 @@
                        :else (merge-products (list (first op)) w)))))
 
 ;;; TODO: Keep an eye on this!!
-(defn can-do? [u v]
+(defn- can-do? [u v]
   (cond
    (and (= (exponent v) (exponent u)) (= (base v) (base u))) true
-   (and (and (= (kind u) :prodop) (= (kind v) :prodop))
-        (and (= (count (rest u))) (= (count (rest v)))))
+   (and (= (kind u) :prodop) (= (kind v) :prodop))
    (let
        [cu (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest u)))
         ou (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest u)))
+        ou (if-not (= 1 (count ou)) (simplify-product ou) (first ou))
         cv (filter #(or (= (kind %) :fracop) (= (kind %) :number)) (get-prod-operands (rest v)))
         ov (filter #(and (not= (kind %) :fracop) (not= (kind %) :number)) (get-prod-operands (rest v)))
+        ov (if-not (= 1 (count ov)) (simplify-product ov) (first ov))
         cu (cond 
             (empty? cu) 1
             (= (count cu) 1) (first cu)
@@ -425,7 +441,7 @@
 
 ;;; Getting the coefficients
 ;;; TODO: Keep an eye on this!!
-(defn get-coefficients [u v]
+(defn- get-coefficients [u v]
   (cond 
    (and (= (kind u) :prodop) (= (kind v) :prodop)) 
    (let 
@@ -469,68 +485,74 @@
      [cu u])))
 
 
-(defn tutu1 [u & us]
+(defn- tutu1 [u & us]
   (get-sum-operands (rest (concat u us))))
 
 ;;; get all + operands
-(defn get-sum-operands [x]
+(defn get-sum-operands 
+  "Gets all the operands of a nested sum expression. 
+
+   E.g.:  (def t (+ (+ 3 (* x y)) (* z 3))) 
+   (get-sum-operands (rest t)) = [3 (* x y) (* z 3)]."
+  
+  [x]
   (let 
       [sos (filter #(= (kind %) :sumop) x)
        oos (filter #(not (= (kind %) :sumop)) x)]
     (concat oos (if-not (empty? sos) (apply tutu1 sos)))))
 
-(defn tutu [u & us]
+(defn- tutu [u & us]
   (get-prod-operands (rest (concat u us))))
 
 ;;; get all * operands
-(defn get-prod-operands [x]
+(defn get-prod-operands 
+  "Same as get-sum-operands but for product type."
+  
+  [x]
   (let 
       [sos (filter #(= (kind %) :prodop) x)
        oos (filter #(not (= (kind %) :prodop)) x)]
     (concat oos (if-not (empty? sos) (apply tutu sos)))))
 
-;; (get-prod-operands '((* (* (/ 1 2) (cos 0)) 1) (* 1 1)))
-
 ;;; simplify-sum-rec
-(defn simplify-sum-rec [op]
-  (do 
-    (cond
-     (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :sumop) (= (kind y) :sumop))))) 
-     (let [[x y] op]
-       (cond
-        (and (or (= (kind x) :number) (= (kind x) :fracop)) 
-             (or (= (kind y) :number) (= (kind y) :fracop)))
-        (let [p (simplify-rne (list '+ x y))]
-          (if (= p 0) '() (list p)))
-        (= x 0) (list y)
-        (= y 0) (list x)
-        (and (= (base x) (base y)) (= (exponent x) (exponent y))) 
-        (let [p (simplify-product (list 2 x))]
-          (cond
-           (= p 0) '()
-           :else (list p)))
-        ;; Maybe this can be done in some better way?
-        ;; In some other place?
-        (can-do? x y)
-        (let [[res sym] (get-coefficients x y)]
-          (cond
-           (= res 0) '()
-           (or (= (kind sym) :fracop) (= (kind sym) :number)) (list (simplify-rne (list '+ res sym)))
-           :else (list (simplify-product (list res sym)))))
-        ;; lex-less-than is the ordering constraint for the cannoican normal form
-        (algebra-compare y x) (list y x)
-        :else (list x y))) 
-     ;; This is the else part and SPRDEC-2
-     (and (= (count op) 2) (let [[x y] op] (or (= (kind x) :sumop) (= (kind y) :sumop))))
-     (let [[x y] op]
-       (cond
-        (and (= (kind x) :sumop) (= (kind y) :sumop)) (merge-sums (get-sum-operands (rest x)) (get-sum-operands (rest y)))
-        (= (kind x) :sumop) (merge-sums (get-sum-operands (rest x)) (list y))
-        (= (kind y) :sumop) (merge-sums (list x) (get-sum-operands (rest y)))))
-     (> (count op) 2) (let [w (simplify-sum-rec (rest op))] 
-                        (cond
-                         (= (kind (first op)) :sumop) (merge-sums (get-sum-operands (rest (first op))) w)
-                         :else (merge-sums (list (first op)) w))))))
+(defn- simplify-sum-rec [op]
+  (cond
+   (and (= (count op) 2) (let [[x y] op] (not (or (= (kind x) :sumop) (= (kind y) :sumop))))) 
+   (let [[x y] op]
+     (cond
+      (and (or (= (kind x) :number) (= (kind x) :fracop)) 
+           (or (= (kind y) :number) (= (kind y) :fracop)))
+      (let [p (simplify-rne (list '+ x y))]
+        (if (= p 0) '() (list p)))
+      (= x 0) (list y)
+      (= y 0) (list x)
+      (and (= (base x) (base y)) (= (exponent x) (exponent y))) 
+      (let [p (simplify-product (list 2 x))]
+        (cond
+         (= p 0) '()
+         :else (list p)))
+      ;; Maybe this can be done in some better way?
+      ;; In some other place?
+      (can-do? x y)
+      (let [[res sym] (get-coefficients x y)]
+        (cond
+         (= res 0) '()
+         (or (= (kind sym) :fracop) (= (kind sym) :number)) (list (simplify-rne (list '+ res sym)))
+         :else (list (simplify-product (list res sym)))))
+      ;; lex-less-than is the ordering constraint for the cannoican normal form
+      (algebra-compare y x) (list y x)
+      :else (list x y))) 
+   ;; This is the else part and SPRDEC-2
+   (and (= (count op) 2) (let [[x y] op] (or (= (kind x) :sumop) (= (kind y) :sumop))))
+   (let [[x y] op]
+     (cond
+      (and (= (kind x) :sumop) (= (kind y) :sumop)) (merge-sums (get-sum-operands (rest x)) (get-sum-operands (rest y)))
+      (= (kind x) :sumop) (merge-sums (get-sum-operands (rest x)) (list y))
+      (= (kind y) :sumop) (merge-sums (list x) (get-sum-operands (rest y)))))
+   (> (count op) 2) (let [w (simplify-sum-rec (rest op))] 
+                      (cond
+                       (= (kind (first op)) :sumop) (merge-sums (get-sum-operands (rest (first op))) w)
+                       :else (merge-sums (list (first op)) w)))))
 
 ;;; simplify-product
 (defn- simplify-product [u]
@@ -572,7 +594,7 @@
                  :else (reduce #(list '* % %2) v)))))))
 
 ;;; simplify-sum
-(defn simplify-sum [u]
+(defn- simplify-sum [u]
   (cond
    (some #(= 'UNDEFINED %) u) 'UNDEFINED
    (= (count u) 1) u
@@ -584,7 +606,10 @@
 
 
 ;;; The main automatic simplification function
-(defn simplify* [u]
+(defn simplify* 
+  "Automatic simplification of an expression."
+  
+  [u]
   (match [(kind u)]
          [:number] u
          [:symbol] u
@@ -599,6 +624,9 @@
                       [:factop] (simplify-factorial v)
                       [:function] (simplify-function v)))))
 
-(defmacro simplify [& args]
+(defmacro simplify 
+  "Macro that calls simplify*"
+  
+  [& args]
   `(map simplify* '(~@args)))
 

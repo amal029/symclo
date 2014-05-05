@@ -13,7 +13,11 @@
 (defn- third [x] (first (nnext x)))
 
 ;;; Distributes multiplication over sums
-(defn expand* [u]
+(defn expand* 
+  "Recursively expand expression u. Call auto-simplification before and
+   after expand* operation on u"
+  
+  [u]
   (cond
    (= (simp/kind u) :sumop) 
    (let [[_ v t] u]
@@ -44,7 +48,10 @@
     (expand* (reduce #(list '* % %2) (repeat n u)))
     (list '** u n)))
 
-(defn expand-main-op [u]
+(defn expand-main-op 
+  "Expand only the top-level of the expression."
+  
+  [u]
   (cond
    (= (simp/kind u) :sumop) u
    (= (simp/kind u) :prodop) (expand-product (second u) (third u))
@@ -52,5 +59,9 @@
                               (expand-product (second p) (third p)))
    :else u))
 
-(defmacro expand [& args]
+(defmacro expand 
+  "Macro that calls expand* on the expression after auto-simplifying
+   it."
+  
+  [& args]
   `(map (comp simp/simplify* expand* simp/simplify*) '(~@args)))

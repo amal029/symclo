@@ -200,7 +200,7 @@
   (coefficient-polynomial-gpe u x (degree-polynomial u x)))
 
 (defn polynomial-division 
-  "Divides polynomial u by v, w.r.t. x a symbol"
+  "Divides univariate polynomials u by v, w.r.t. x a symbol" 
   [u v x]
   (loop [q 0
          r u
@@ -220,10 +220,15 @@
       ;; else
       [q r])))
 
-(defn polynomial-quotient [u v x]
+(defn polynomial-quotient 
+  "Performs univariate polynomial division and gives the quotient back."
+  [u v x]
   (first (polynomial-division u v x)))
 
-(defn polynomial-remainder [u v x]
+(defn polynomial-remainder 
+  "Performs univariate polynomial division and gives the remainder
+  back."  
+  [u v x]
   (second (polynomial-division u v x)))
 
 (defn polynomial-expansion* 
@@ -246,7 +251,12 @@
   [u v x]
   (substitute (polynomial-expansion* u v x 't) 't v))
 
-(defn lm [u l]
+(defn lm 
+  "Get the leading monomial coefficient from a mutilvariate polynomial
+  expression u given the list of symbols l. Where (first l) is the
+  leading symbol" 
+  
+  [u l]
   (cond
    (empty? l) u
    :else
@@ -255,7 +265,9 @@
      (simp/simplify* (list '* (list '** (first l) m) (lm c (rest l)))))))
 
 (defn mv-rec-polynomial-div
-  "Multivariate recursive structure based polynomial division." 
+  "Multivariate recursive structure based polynomial division. Monomial
+  based division via mv-polynomial-division should be prefered."  
+  
   [u v l]
   (cond
    (empty? l) [(simp/simplify* (list '* u (list '** v -1))) 0]
@@ -274,14 +286,15 @@
                        [q r m]
                        [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
                         (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* v (first d) (list '** x (- m n))))))) ;r
-                        (degree-polynomial r x) ;m
+                        ;; this is a bit sucky, FIXME!
+                        (degree-polynomial (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* v (first d) (list '** x (- m n))))))) x) ;m
                         ])]
          (if (and (not= r 0) (= (second d) 0)) 
            (recur x r m n q lcv d)
            [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))
        [(simp/simplify* (expand/expand* (simp/simplify* q))) r]))))
 
-(defn G 
+(defn- G 
   "u is a multivariate GPE, i.e., a sum of multivariate GME(s) and v is
   a multivariate GME" 
   [u v l] 
@@ -311,7 +324,11 @@
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
 
-(defn back-substitute [alist symbols]
+(defn back-substitute 
+  "Given an upper triangular matrix (alist = a list of lists) performs
+   back substitution. Used for solving simultaneous equations."
+  
+  [alist symbols]
   (let [solns [(simp/simplify* (list '* -1 (last (last alist))))]]
     (loop [solns solns
            alist (drop-last alist)]

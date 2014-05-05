@@ -8,7 +8,10 @@
 
 (defn- third [u] (first (nnext u)))
 
-(defn numer [u]
+(defn numer 
+  "Gives numerator of an expression."
+  
+  [u]
   (match [(simp/kind u)]
          [:fracop] (fnext u)
          [:quotop] (fnext u)
@@ -21,7 +24,10 @@
          [:prodop] (list '* (numer (fnext u)) (numer (third u)))
          [_] u))
 
-(defn denom [u]
+(defn denom 
+  "Gives the denominator of a expression."
+  
+  [u]
   (match [(simp/kind u)]
          [:fracop] (third u)
          [:quotop] (third u)
@@ -45,7 +51,8 @@
 
 (defn natural*
   "Rationalize an expression, e.g.: 
-   (natural (+ (/ 1 x) (/ 1 y)) = (/ (+ x y) (* x y)))" 
+   (natural (+ (/ 1 x) (/ 1 y)) = (/ (+ x y) (* x y))). 
+   Call simplify* before and after" 
   [u] 
   (cond
    (= (simp/kind u) :powop) (list '** (natural* (fnext u)) (third u))
@@ -53,7 +60,10 @@
    (= (simp/kind u) :sumop) (natural-sum (natural* (fnext u)) (natural* (third u)))
    :else u))
 
-(defmacro natural [& args]
+(defmacro natural 
+  "Calls natural* on args. automatic simplification is implicit."
+  
+  [& args]
   `(map (comp simp/simplify* natural* simp/simplify*) '(~@args)))
 
 

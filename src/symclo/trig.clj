@@ -20,7 +20,10 @@
 
 (defn- third [x] (first (nnext x)))
 
-(defn trig-kind [op]
+(defn trig-kind 
+  "Gives the kind of trignometric function a keyword, e.g., :sin"
+  
+  [op]
   (if (seq? op)
     (cond 
      (= (first op) 'sin) :sin
@@ -47,13 +50,19 @@
 ;;; The trignometric identities from text books trig-functions can only
 ;;; ever have 1 operand
 
-(defn tr1 [[_ oo :as v]]
+(defn tr1 
+  "sec and csc trig conversion to sin and cos."
+  
+  [[_ oo :as v]]
   (match [(trig-kind v)]
          [:sec] (list '/ 1 (list 'cos oo))
          [:csc] (list '/ 1 (list 'sin oo))
          [_] v))
 
-(defn tr2 [[_ oo :as v]]
+(defn tr2 
+  "tan and cot conversion to sin and cos."
+  
+  [[_ oo :as v]]
   (match [(trig-kind v)]
          [:tan] (list '/ (list 'sin oo) (list 'cos oo))
          [:cot] (list '/ (list 'cos oo) (list 'sin oo))
@@ -62,7 +71,10 @@
 (defn- less-than-zero? [x] (< x 0))
 
 ;;; FIXME: we can make this stronger
-(defn tr3 [[_ oo :as v]]
+(defn tr3 
+  "special angle simplification. E.g., tan(%pi+angle) = tan(angle)"
+  
+  [[_ oo :as v]]
   (let [oo (simp/simplify* oo)]
     (try 
       (match [(vec (flatten oo))]
@@ -106,7 +118,10 @@
 
 ;;; special angles
 ;;; TODO: need a reverse rule for this
-(defn tr4 [[_ oo :as v]]
+(defn tr4 
+  "special angle simplification (2). E.g., tan(%pi/3)= (** 3 (/ 1 2))"
+  
+  [[_ oo :as v]]
   (let [oo (simp/simplify* oo)]
     (if (= oo 0)
           (cond
@@ -139,7 +154,10 @@
 
 ;;; sin^2(a) rule
 
-(defn tr5 [op]
+(defn tr5 
+  "sin^2(a) = 1 - cos^2(a) simplification."
+  
+  [op]
   (cond
    (= (simp/kind (simp/simplify* op)) :powop)
    (let [[_ x y] op]
@@ -150,7 +168,10 @@
    :else op))
 
 ;;; cos^2(a) rule
-(defn tr6 [op]
+(defn tr6 
+  "cos^2(a) to 1 - sin^2(a) simplification."
+  
+  [op]
   (cond
    (= (simp/kind (simp/simplify* op)) :powop)
    (let [[_ x y] op]
@@ -162,7 +183,10 @@
 
 
 ;;; cos^2(a) rule lowering angle
-(defn tr7 [op]
+(defn tr7 
+  "lowering cos^2(a) to cos(2a)..."
+  
+  [op]
   (cond
    (= (simp/kind (simp/simplify* op)) :powop)
    (let [[_ x y] op]
@@ -173,7 +197,10 @@
    :else op))
 
 ;;; product to sum or difference
-(defn tr8 [op]
+(defn tr8 
+  "product to sum or difference of trignometric identities."
+  
+  [op]
   (cond
    (= (simp/kind op) :prodop)
    (if (= (count (rest op)) 2)
@@ -204,7 +231,11 @@
    :else op))
 
 ;;; converting sum or diff to product
-(defn tr9 [op]
+(defn tr9 
+  "conversion of sum or difference to product of trignometric
+   identities."
+  
+  [op]
   (cond 
    (and (= (count (rest op)) 2) (= (simp/kind (simp/simplify* op)) :sumop))
    (let [[_ x y] op]
@@ -269,7 +300,10 @@
 
 
 ;;; double angles
-(defn tr11 [op]
+(defn tr11 
+  "Double angle trignometric formulas."
+  
+  [op]
   (cond
    (= (trig-kind op) :sin)
    (let [[_ x] op
@@ -350,7 +384,10 @@
 
 
 ;;; product of tan or cot
-(defn tr13 [op]
+(defn tr13 
+  "Product of tan or cot."
+  
+  [op]
   (cond
    (= (simp/kind op) :prodop)
    (let [[_ x y] op]
@@ -369,7 +406,7 @@
 
 ;;; Joel S. Cohen Elementrary CAS trig simplification
 
-(defn trig-substitute [op]
+(defn- trig-substitute [op]
   (cond
    (or (=(simp/kind op) :number)
        (=(simp/kind op) :fracop)
@@ -401,7 +438,7 @@
                                [(list 'sin A) (list 'cos A)])
    :else [(list 'sin A) (list 'cos A)]))
 
-(defn expand-trig [u]
+(defn- expand-trig [u]
   (cond
    (or (= (simp/kind u) :number) (= (simp/kind u) :fracop) (= (simp/kind u) :symbol)) 
    u
@@ -413,7 +450,7 @@
 
 ;;; FIXME: this can be made quicker with sets rather that lists.
 ;;; This function is very sucky!!
-(defn separate-sin-cos [u]
+(defn- separate-sin-cos [u]
   ;; There is a problem in get-prod-operands when there are multiple or single 
   (cond
    (= (simp/kind u) :prodop)
@@ -442,7 +479,7 @@
    (or (= (trig-kind u) :cos) (= (trig-kind u) :sin)) [1 u]
    :else [u 1]))
 
-(defn contract-trig-product [u]
+(defn- contract-trig-product [u]
   (do 
     (if (= (count u) 3)
       ;; then
@@ -459,12 +496,12 @@
 
 ;;; FIXME: The power operation can be done using binomial algorithms to
 ;;; avoid excessive recursion
-(defn contract-trig-power [v]
+(defn- contract-trig-power [v]
   (if (or (= (simp/kind (second v)) :fracop) (= (simp/kind (second v)) :number) (= (simp/kind (second v)) :symbol))
     v
     (contract-trig-rules (reduce #(list '* % %2) (repeat (third v) (second v))))))
 
-(defn contract-trig-rules [u]
+(defn- contract-trig-rules [u]
   (let [v (expand/expand-main-op u)]
     (cond
      (= (simp/kind v) :powop) (contract-trig-power v)
@@ -483,7 +520,7 @@
                   (list '+ % %2)) 0 (rest v))
      :else v)))
 
-(defn contract-trig [u]
+(defn- contract-trig [u]
   (cond
    (or (= (simp/kind u) :symbol) (= (simp/kind u) :fracop) (= (simp/kind u) :number))
    u
@@ -492,17 +529,17 @@
              (contract-trig-rules v)
              v))))
 
-(defn simplify-trig-operands [u]
+(defn- simplify-trig-operands [u]
   (cond
    (= (trig-kind u) :other) (simp/simplify* u)
    :else (list (first u) (simplify-trig-operands (fnext u)))))
 
-(defn expand-trig-operands [u]
+(defn- expand-trig-operands [u]
   (cond
    (= (trig-kind u) :other) (simp/simplify* (expand/expand* u))
    :else (list (first u) (expand-trig-operands (fnext u)))))
 
-(defn apply-induced-identities [u]
+(defn- apply-induced-identities [u]
   (cond
    (and (not (= (simp/kind u) :symbol)) (not (= (simp/kind u) :number)) (not (= (simp/kind u) :fracop)) (= (trig-kind u) :other)) 
    (let [[x y z] u] 
@@ -510,7 +547,7 @@
    (and (not (= (simp/kind u) :symbol)) (not (= (simp/kind u) :number)) (not (= (simp/kind u) :fracop))) (tr3 u)
    :else u))
 
-(defn apply-special-identities [u]
+(defn- apply-special-identities [u]
   (cond
    (or (= (simp/kind u) :symbol) (= (simp/kind u) :number) (= (simp/kind u) :fracop)) u
    (= (trig-kind u) :other)
@@ -519,7 +556,11 @@
    :else (tr4 u)))
 
 
-(defn trig-simplify* [u]
+(defn trig-simplify* 
+  "Simplifies trignometric expressions using identities. call simplify*
+   before and after this function call."
+  
+  [u]
   (let [
         u (simplify-trig-operands u)
         ;; expand the operands recursively
@@ -563,5 +604,9 @@
     (if (= d 0) 'UNDEFINED (simp/simplify* (list '* (list '** d -1) n)))))
 
 
-(defmacro trig-simplify [& args]
+(defmacro trig-simplify 
+  "Macro that calls trig-simplify* automatic simplification is
+   implicit."
+  
+  [& args]
   `(map (comp simp/simplify* trig-simplify* simp/simplify*) '(~@args)))

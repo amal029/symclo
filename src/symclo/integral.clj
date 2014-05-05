@@ -10,7 +10,7 @@
 (require '[symclo.util :as util])
 (require '[symclo.rationalize :as natural])
 
-(def third (comp first nnext))
+(def ^:private third (comp first nnext))
 
 (declare trial-sub)
 (declare linear-props)
@@ -20,7 +20,7 @@
 (declare integrate-rational-form)
 
 ;;; Add more definition here
-(defn integral-table [f x]
+(defn- integral-table [f x]
   (cond
    (util/free-of f x) (list '* f x)
    (= (simp/kind f) :symbol) (simp/simplify* (list '/ (list '** x (list '+ 1 1)) (list '+ 1 1)))
@@ -69,10 +69,10 @@
 
 ;;; Shortcut method for trial-sub (gets more than just the required elements)
 ;;; FIXME: will lead to more recursion then necessary
-(defn trial-sub [f x]
+(defn- trial-sub [f x]
     (filter #(not (util/free-of % x)) (set (util/complete-sub-expression f))))
 
-(defn substitution-method [f x]
+(defn- substitution-method [f x]
   (let [P (trial-sub f x)
         FS (map #(if (and (not (util/free-of % x)) (not= % x))
                    (let [u (simp/simplify* (util/substitute (simp/simplify* (list '/ f (deriv/deriv* % x))) % 'v))]
@@ -84,7 +84,7 @@
       (first (filter (partial not= 'FAIL) FS))
       'FAIL)))
 
-(defn quadratic? 
+(defn- quadratic? 
   "Checks if u is quadratic w.r.t x"
   [u x]
   (= (util/degree-polynomial u x) 2))
@@ -94,7 +94,7 @@
   [u x]
   (= (util/degree-polynomial u x) 1))
 
-(defn integrate-rational-form [u x]
+(defn- integrate-rational-form [u x]
   (cond
    ;; The first case of induction
    (and (= (natural/numer u) 1) (quadratic? (natural/denom u) x))
@@ -186,7 +186,11 @@
        'FAIL))
    :else 'FAIL))
 
-(defn integrate* [f x]
+(defn integrate* 
+  "Integrate a function f w.r.t symbol x. Call simplify* before and
+   after integration."
+  
+  [f x]
   (let [F (integral-table f x)]
     (if (= 'FAIL F) 
       (let [F (linear-props f x)]
@@ -206,5 +210,8 @@
       F)))
 
 
-(defmacro integrate [arg sym]
+(defmacro integrate 
+  "Calls integrate* on arg w.r.t sym with implicit auto simplification."
+  
+  [arg sym]
   `(simp/simplify* (integrate* (simp/simplify* '~arg) '~sym)))
