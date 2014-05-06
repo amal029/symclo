@@ -30,7 +30,6 @@
             [R r i] (if (= i (count F))
                       [(simp/simplify* (list '- R m)) (simp/simplify* (list '+ r m)) 0]
                       [R r i])]
-        (prn R)
         (if-not (= R 0) 
           (recur R r c i (util/lm R L) (nth F i) (simp/simplify* (list '/ (util/lm R L)  (util/lm (nth F i) L))))
           [(apply vector c) r]))) 
