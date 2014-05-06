@@ -10,7 +10,6 @@
 (use 'clojure.math.numeric-tower)
 (use 'clojure.tools.trace)
 (require '[symclo.core :as simp])
-(require '[symclo.util :as util])
 (require '[symclo.expand :as expand])
 (require '[symclo.rationalize :as natural])
 
@@ -271,34 +270,6 @@
       :else op))
    :else op))
 
-;;; sum or diff of angles
-#_(defn tr10 [v]
-    (cond 
-     (= (trig-kind v) :sin)
-     (let [[_ x] v]
-       (let [x (simp/simplify* x)]
-         (cond
-          (= (simp/kind x) :sumop)
-          (let [[_ x y :as xx] x]
-            (if (util/is-addition? xx)
-              (simp/simplify* (list '+ (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y))))
-              (let [[_ _ y] y]
-                (simp/simplify* (list '- (list '* (list 'sin x) (list 'cos y)) (list '* (list 'cos x) (list 'sin y)))))))
-          :else v)))
-     (= (trig-kind v) :cos)
-     (let [[_ x] v]
-       (let [x (simp/simplify* x)]
-         (cond
-          (= (simp/kind x) :sumop)
-          (let [[_ x y :as xx] x]
-            (if (util/is-addition? xx)
-              (simp/simplify* (list '- (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y))))
-              (let [[_ _ y] y] 
-                (simp/simplify* (list '+ (list '* (list 'cos x) (list 'cos y)) (list '* (list 'sin x) (list 'sin y)))))))
-          :else v)))
-     :else v))
-
-
 ;;; double angles
 (defn tr11 
   "Double angle trignometric formulas."
@@ -365,23 +336,6 @@
          :else op))
       :else op))
    :else op))
-
-;;; sum or difference of tan
-#_(defn tr12 [v]
-    (cond 
-     (= (trig-kind v) :tan)
-     (let [[_ x] v]
-       (let [x (simp/simplify* x)]
-         (cond
-          (= (simp/kind x) :sumop)
-          (let [[_ x y :as xx] x]
-            (if (util/is-addition? xx)
-              (simp/simplify* (list '/ (list '+ (list 'tan x) (list 'tan y)) (list '- 1 (list '* (list 'tan x) (list 'tan y)))))
-              (let [[_ _ y] y]
-                (simp/simplify* (list '/ (list '- (list 'tan x) (list 'tan y)) (list '+ 1 (list '* (list 'tan x) (list 'tan y))))))))
-          :else v)))
-     :else v))
-
 
 ;;; product of tan or cot
 (defn tr13 

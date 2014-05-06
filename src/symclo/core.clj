@@ -3,6 +3,7 @@
 (use '[clojure.core.match :only (match)])
 (use 'clojure.math.numeric-tower)
 (use 'clojure.tools.trace)
+(use 'clojure.core.typed)
 ;; (require '[symclo.util :as util])
 
 ;;; forward declarations for mutually recursive functions
@@ -25,7 +26,6 @@
       (recur b (mod a b))))
 
 ;;; The type of the operator
-;; (throw (Throwable. (str op " is type: " (type op) "\n")))
 (defn- kind-op [op]
   (cond 
    (= (first op) '*) :prodop
@@ -37,14 +37,13 @@
    :else :function))
 
 ;;; The type of the number or operator?
-(defn kind 
+(defn kind
   "Gives the kind of expression u. keyword."
   
   [u]
   (cond 
    (integer? u) :number
    (symbol? u) :symbol
-   ;; (number? u) (throw (Throwable. (str "fractions should only have integer numerators and denominators: " u)))
    :else (kind-op u)))
 
 (defn- simplify-rational-number [u]
