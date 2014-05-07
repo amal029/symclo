@@ -35,26 +35,30 @@
           [(apply vector c) r]))) 
     [(apply vector (take (count F) (iterate identity 0))) 0]))
 
-(defn- s-poly [a b L])
+(defn- s-poly [u v L]
+  (let [d (util/lcm (util/lm u L) (util/lm v L))
+        f (simp/simplify* (list '* u (list '/ d (util/lm u L))))
+        s (simp/simplify* (list '* v (list '/ d (util/lm v L))))]
+    (simp/simplify* (list '- f s))))
 
 (defn g-basis
-  "Calculate the grobner basis given basis F and the order of symbols L
-  in F"
+  "Calculate the grobner basis given basis F and the ordered list of
+  symbols L in F" 
+  
   [F L]
   (if-not (empty? F) 
     (let [G F
           b (take (dec (count G)) (iterate identity G))
           c (map-indexed #(drop (inc %) %2) b)
-          a (butlast G)
-          P (mapcat (fn [l m] (map #(vector % %2) (take (count m) (iterate identity l)) m)) a c)]
+          P (mapcat (fn [l m] (map #(vector % %2) (take (count m) (iterate identity l)) m)) (butlast G) c)]
       (loop [s (s-poly (ffirst P) (ffirst P) L)
              P (rest P)
              r (second (g-reduce s G L))]
         (let [[P G] (if-not (= r 0)
                       [(concat P (map #(vector % r) G))
-                       G]
+                       (concat G [r])]
                       [P G])]
           (if-not (empty? P)
-            (recur (s-poly (ffirst P) (ffirst P) L) (rest P) (second (g-reduce s G L)))
+            (recur (s-poly (ffirst P) (ffirst P) L) (rest P) (second (g-reduce (s-poly (ffirst P) (ffirst P) L) G L)))
             G))))
     F))

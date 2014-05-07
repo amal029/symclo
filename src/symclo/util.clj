@@ -128,8 +128,9 @@
    :else 'UNDEFINED))
 
 (defn coefficient-polynomial-gpe 
-  "Function that gives the list of coefficients of a generalized
-   polynomial expression (GPE) x: list, u: GPE, j: non negative degree"
+  "Function that gives the coefficient of a generalized polynomial
+   expression (GPE) x: list, u: GPE, j: non negative degree" 
+  
   [u x j]
   (cond
    (not= (simp/kind u) :sumop)
@@ -148,7 +149,9 @@
       (let [c (map #(first %) (filter #(= (second %) j) v))]
         (if (empty? c) 0 (simp/simplify* (reduce #(list '+ % %2) c))))))))
 
-(defn polynomial-lce [u x]
+(defn polynomial-lce 
+  "The leading coefficient of polynomial u w.r.t symbol x"
+  [u x]
   (coefficient-polynomial-gpe u x (degree-polynomial u x)))
 
 (defn polynomial-division 
@@ -275,6 +278,66 @@
           r (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* f v)))))
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
+
+;;; TODO 
+(defn- normalize [u L K])
+
+;;; TODO
+(defn- polynomial-content [u x R K])
+
+(defn- pseudo-remainder [u x v]
+  (loop [p 0
+         s u
+         m (degree-polynomial s x)
+         n (degree-polynomial v x)
+         delta (max ((inc (- m n)) 0))
+         lcv (coefficient-polynomial-gpe v x n)
+         sigma 0]
+    (if (>= m n)
+      (let [lcs (coefficient-polynomial-gpe s x m)
+            ;; replace lcr with lcs, a mistake in J. Cohen text.
+            p (simp/simplify* (list '+ (list '* lcv p) (list '* lcs (list '** x (list '- m n)))))
+            s ((comp simp/simplify* expand/expand* simp/simplify*) 
+               (list '- (list '* lcv s) (list '* lcs v (list '** x (list '- m n)))))
+            sigma (inc sigma)
+            m (degree-polynomial s x)]
+        (recur p s m n delta lcv sigma))
+      ((comp simp/simplify* expand/expand* simp/simplify*) (list '* s (list '** lcv (list '- delta sigma)))))))
+
+(defn- mv-poly-gcd-rec [u v L K]
+  (cond
+   (empty? L) (if (= K 'Z) (simp/integer_gcd u v) 1)
+   :else
+   (let [x (first L)
+         R (rest L)
+         cont_u (polynomial-content u x R K)
+         cont_v (polynomial-content v x R K)
+         d (mv-poly-gcd-rec cont_u cont_v R K)]
+     (loop [pp_u (first (mv-rec-polynomial-div u cont_u L K))
+            pp_v (first (mv-rec-polynomial-div v cont_v L K))]
+       (if-not (= 0 pp_v)
+         (let [r (pseudo-remainder pp_u pp_v x)
+               pp_r (if (= r 0) 0
+                        (first (mv-rec-polynomial-div u (polynomial-content r x R K) L K)))]
+           ;; FIXME: this can be made better
+           (if-not (= 0 pp_u) (recur pp_v pp_r)
+                   ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u))))
+         ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u)))))))
+
+(defn mv-gcd 
+  "Multivariate polynomial gcd of u and v, given the order of symbols in
+   list L and coefficient field K is Z or Q"
+  
+  [u v L K]
+  (cond
+   (= u 0) (normalize v L K)
+   (= v 0) (normalize u L K)
+   :else (normalize (mv-poly-gcd-rec u v L K) L K)))
+
+(defn mv-lcm [u v L K]
+  (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L K)))
+  [u v L]
+  (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L 'Q))))
 
 (defn back-substitute 
   "Given an upper triangular matrix (alist = a list of lists) performs

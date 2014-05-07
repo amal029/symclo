@@ -20,7 +20,9 @@
 (declare get-sum-operands)
 
 ;;; Euclid's gcd algorithm
-(defn- integer_gcd 
+(defn integer_gcd 
+  "GCD of 2 integers"
+  
   [a b]
   (if (zero? b) a
       (recur b (mod a b))))
