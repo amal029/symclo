@@ -334,10 +334,9 @@
    (= v 0) (normalize u L K)
    :else (normalize (mv-poly-gcd-rec u v L K) L K)))
 
-(defn mv-lcm [u v L K]
-  (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L K)))
-  [u v L]
-  (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L 'Q))))
+(defn mv-lcm 
+  ([u v L K] simp/simplify* (list '/ (list '* u v) (mv-gcd u v L K)))
+  ([u v L] simp/simplify* (list '/ (list '* u v) (mv-gcd u v L 'Q))))
 
 (defn back-substitute 
   "Given an upper triangular matrix (alist = a list of lists) performs
