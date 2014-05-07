@@ -36,7 +36,7 @@
     [(apply vector (take (count F) (iterate identity 0))) 0]))
 
 (defn- s-poly [u v L]
-  (let [d (util/lcm (util/lm u L) (util/lm v L))
+  (let [d (util/mv-lcm (util/lm u L) (util/lm v L))
         f (simp/simplify* (list '* u (list '/ d (util/lm u L))))
         s (simp/simplify* (list '* v (list '/ d (util/lm v L))))]
     (simp/simplify* (list '- f s))))
