@@ -320,7 +320,7 @@
                pp_r (if (= r 0) 0
                         (first (mv-rec-polynomial-div u (polynomial-content r x R K) L K)))]
            ;; FIXME: this can be made better
-           (if-not (= 0 pp_u) (recur pp_v pp_r)
+           (if-not (= 0 pp_v) (recur pp_v pp_r)
                    ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u))))
          ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u)))))))
 
