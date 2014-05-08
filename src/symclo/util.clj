@@ -55,7 +55,7 @@
    (and (contains? v (second u)) (integer? (third u)) (> (third u) 0))
    (= (simp/kind u) :prodop)
    (reduce #(and % %2) (map (partial monomial-gpe* v) (simp/get-prod-operands (rest u)))) 
-   :else (reduce #(and % %2) (map (partial free-of u) v))))
+   :else (every? (partial free-of u) v)))
 
 (defn monomial-gpe 
   "Function that recognizes if u is a generalized monomial expression in
@@ -279,11 +279,30 @@
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
 
-;;; TODO 
-(defn- normalize [u L K])
+(defn- normalize* [u L K]
+  (cond
+   (and (= K 'Z) (= (simp/kind u) :number))
+   (cond 
+    (> u 0) 1
+    (= u 0) 0
+    :else -1)
+   (and (= K 'Z) (= (simp/kind u) :fracop))
+   (throw (Throwable. (str "Fraction in a integer domain: " u)))
+   (and (= K 'Q) (or (= (simp/kind u) :number) (= (simp/kind u) :fracop)))
+   (simp/simplify* (list '** u -1))
+   :else
+   (recur (polynomial-lce u (first L)) (rest L) K)))
 
-;;; TODO
-(defn- polynomial-content [u x R K])
+(defn normalize
+  "Normalize multivariate polynomial u in Q domain to a monic polynomial
+   or 0 and when in Z domain, into the unit normal form."
+  
+  [u L K]
+  (let [v (normalize* u L K)]
+    (simp/simplify* (list '* v u))))
+
+(defn- polynomial-content [u x R K]
+  )
 
 (defn- pseudo-remainder [u x v]
   (loop [p 0
