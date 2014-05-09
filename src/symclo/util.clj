@@ -11,6 +11,8 @@
 (declare G)
 (def ^:private third (comp first nnext))
 
+(declare mv-gcd)
+
 (defn complete-sub-expression [u]
   (cond
    (or (= (simp/kind u) :fracop) (= (simp/kind u) :symbol) (= (simp/kind u) :number)) 
@@ -302,21 +304,27 @@
     (simp/simplify* (list '* v u))))
 
 (defn- polynomial-content [u x R K]
-  )
+  (let [alldegrees (concat (range (degree-polynomial u x) 0 -1) [0])
+        coefs (filter (partial not= 0) (map (partial coefficient-polynomial-gpe u x) alldegrees))]
+    (cond
+     (>= (count coefs) 2) 
+     (reduce #(mv-gcd % %2 R K) 0 coefs)
+     (= (count coefs) 1)
+     (normalize (first coefs) R K)
+     :else 0)))
 
-(defn- pseudo-remainder [u x v]
+(defn- pseudo-remainder [u v x]
   (loop [p 0
          s u
          m (degree-polynomial s x)
          n (degree-polynomial v x)
-         delta (max ((inc (- m n)) 0))
+         delta (max (inc (- m n)) 0)
          lcv (coefficient-polynomial-gpe v x n)
          sigma 0]
-    (if (>= m n)
+    (if (and (not= s 0) (>= m n))
       (let [lcs (coefficient-polynomial-gpe s x m)
-            ;; replace lcr with lcs, a mistake in J. Cohen text.
             p (simp/simplify* (list '+ (list '* lcv p) (list '* lcs (list '** x (list '- m n)))))
-            s ((comp simp/simplify* expand/expand* simp/simplify*) 
+            s ((comp simp/simplify* expand/expand* simp/simplify*)
                (list '- (list '* lcv s) (list '* lcs v (list '** x (list '- m n)))))
             sigma (inc sigma)
             m (degree-polynomial s x)]
@@ -332,12 +340,13 @@
          cont_u (polynomial-content u x R K)
          cont_v (polynomial-content v x R K)
          d (mv-poly-gcd-rec cont_u cont_v R K)]
-     (loop [pp_u (first (mv-rec-polynomial-div u cont_u L K))
-            pp_v (first (mv-rec-polynomial-div v cont_v L K))]
+     (loop [pp_u (first (mv-rec-polynomial-div u cont_u L))
+            pp_v (first (mv-rec-polynomial-div v cont_v L))]
        (if-not (= 0 pp_v)
          (let [r (pseudo-remainder pp_u pp_v x)
                pp_r (if (= r 0) 0
-                        (first (mv-rec-polynomial-div u (polynomial-content r x R K) L K)))]
+                        ;; I changed L to R, check of this works all the time -- lots of mistakes in J.Cohen text
+                        (first (mv-rec-polynomial-div r (polynomial-content r x R K) R)))]
            ;; FIXME: this can be made better
            (if-not (= 0 pp_v) (recur pp_v pp_r)
                    ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u))))
@@ -349,13 +358,15 @@
   
   [u v L K]
   (cond
-   (= u 0) (normalize v L K)
-   (= v 0) (normalize u L K)
-   :else (normalize (mv-poly-gcd-rec u v L K) L K)))
+   (= u 0) (simp/simplify* (normalize v L K))
+   (= v 0) (simp/simplify* (normalize u L K))
+   :else (simp/simplify* (normalize (mv-poly-gcd-rec u v L K) L K))))
 
 (defn mv-lcm 
-  ([u v L K] simp/simplify* (list '/ (list '* u v) (mv-gcd u v L K)))
-  ([u v L] simp/simplify* (list '/ (list '* u v) (mv-gcd u v L 'Q))))
+  "Multivariate polynomial lcm of u and v, given the order of symbols in
+   list L and coefficient field K is Z or Q"
+  ([u v L K] (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L K))))
+  ([u v L] (simp/simplify* (list '/ (list '* u v) (mv-gcd u v L 'Q)))))
 
 (defn back-substitute 
   "Given an upper triangular matrix (alist = a list of lists) performs

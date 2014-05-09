@@ -31,6 +31,12 @@ Simultaneous linear equation solver
 
 Multivariate Polynomial division
 
+Multivariate Polynomial gcd
+
+Multivariate Polynomial lcm
+
+Groebner basis calculation in Q and Z domains (untested)
+
 Multivariate Polynomial expansion (untested)
 
 # TODO
@@ -535,6 +541,30 @@ symclo.core> v
 symclo.core>  (util/mv-polynomial-division x v ['x 'y])
 
 [(+ 4 (* 2 x)) (+ (+ (+ 7 (* 5 x)) (* 3 (** x 2))) (* 6 y))]
+
+```
+
+#### Multivariate polynomial gcd
+
+``` clojure
+
+
+symclo.core> (def v (simplify* '(+ (* y (** x 2)) (* 2 (** y 2) x) (** y 3))))
+#'symclo.core/v
+symclo.core> v
+(+ (+ (* (** x 2) y) (* (* 2 x) (** y 2))) (** y 3))
+
+symclo.core> (def u (simplify* '(+ (** y 3) (* -1 y (** x 2)))))
+#'symclo.core/u
+symclo.core> u
+(+ (* (* -1 (** x 2)) y) (** y 3))
+
+symclo.core> (util/mv-gcd u v ['x 'y] 'Z)
+(+ (* x y) (** y 2))
+
+symclo.core> (util/mv-lcm u v ['x 'y] 'Z)
+
+(* (* (** (+ (* x y) (** y 2)) -1) (+ (* (* -1 (** x 2)) y) (** y 3))) (+ (+ (* (** x 2) y) (* (* 2 x) (** y 2))) (** y 3)))
 
 ```
 
