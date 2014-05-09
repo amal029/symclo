@@ -473,16 +473,14 @@
      [cu v])
    :else 
    (let 
-       [
-        [_ cu ou] v
+       [[_ cu ou] v
         cu 
         (cond
          (and (or (= (kind ou) :number) (= (kind ou) :fracop)) (or (= (kind cu) :number) (= (kind cu) :fracop))) 
          (simplify-rne v)
          (and (not (or (= (kind ou) :number) (= (kind ou) :fracop))) (or (= (kind cu) :number) (= (kind cu) :fracop))) 
          (simplify-rne (list '+ cu 1)) 
-         :else (throw (Throwable. (str "Wrong type: " cu))))
-        ]
+         :else (throw (Throwable. (str "Wrong type: " cu))))]
      [cu u])))
 
 
@@ -537,7 +535,6 @@
       (can-do? x y)
       (let [[res sym] (get-coefficients x y)]
         (cond
-         (= res 0) '()
          (or (= (kind sym) :fracop) (= (kind sym) :number)) (list (simplify-rne (list '+ res sym)))
          :else (list (simplify-product (list res sym)))))
       ;; lex-less-than is the ordering constraint for the cannoican normal form

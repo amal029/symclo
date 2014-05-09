@@ -122,10 +122,12 @@
        (if (free-of u x) [u 0] 'UNDEFINED))
    (= (simp/kind u) :prodop)
    (let [va (map #(coefficient-monomial-gpe % x) (simp/get-prod-operands (rest u)))]
-     (if (some (partial = 'UNDEFINED) va) 
+     (if (some (partial = 'UNDEFINED) va)
        'UNDEFINED
        (let [va (second (last (filter #(not= (second %) 0) va)))]
-         [(simp/simplify* (list '/ u (list '** x va))) va])))
+         (if-not (nil? va)
+           [(simp/simplify* (list '/ u (list '** x va))) va]
+           [u 0]))))
    (free-of u x) [u 0]
    :else 'UNDEFINED))
 
@@ -345,8 +347,7 @@
        (if-not (= 0 pp_v)
          (let [r (pseudo-remainder pp_u pp_v x)
                pp_r (if (= r 0) 0
-                        ;; I changed L to R, check of this works all the time -- lots of mistakes in J.Cohen text
-                        (first (mv-rec-polynomial-div r (polynomial-content r x R K) R)))]
+                        (first (mv-rec-polynomial-div r (polynomial-content r x R K) L)))]
            ;; FIXME: this can be made better
            (if-not (= 0 pp_v) (recur pp_v pp_r)
                    ((comp simp/simplify* expand/expand* simp/simplify*) (list '* d pp_u))))
