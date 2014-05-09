@@ -50,7 +50,7 @@
             [:csc] (if (= (second f) x) (list '* -1 (list '%ln (list '+ (list 'csc x) (list 'cot x)))) 'FAIL)
             [_] 'FAIL))))
 
-(defn linear-props [f x]
+(defn- linear-props [f x]
   (cond
    (= (simp/kind f) :prodop)
    (let [operands (simp/get-prod-operands (rest f))
