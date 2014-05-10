@@ -143,7 +143,7 @@
          beta (simp/simplify* (list '- s (list '/ (list '* r b) (list '* 2 a))))]
      (simp/simplify* (list '+ 
                            (list '* alpha (list '%ln (natural/denom u)))
-                           (list '* beta (integrate-rational-form (simp/simplify* (list '/ 1 (natural/denom u))))))))
+                           (list '* beta (integrate-rational-form (simp/simplify* (list '/ 1 (natural/denom u))) x)))))
    ;; Add the induction cases when the denominator is a power type
    (and (= (natural/numer u) 1) (simp/kind (natural/denom u) :powop))
    (let [[_ udb udp] (natural/denom u)]
@@ -161,7 +161,7 @@
                                (list '/ 
                                      (list '* -1 a (- (* 4 udp) 6))
                                      (list '* (dec udp) b2-minus-4ac
-                                           (integrate-rational-form (simp/simplify* (list '** udb (dec udp)))))))))
+                                           (integrate-rational-form (simp/simplify* (list '** udb (dec udp))) x))))))
        ;; else
        'FAIL))
    (and (linear? (natural/numer u) x) (simp/kind (natural/denom u) :powop))
@@ -181,7 +181,7 @@
                                (list '* 
                                      (list '/ minus-b-r-plus-2-as (list '* 2 a))
                                      (integrate-rational-form (simp/simplify* 
-                                                               (list '/ 1 (list '** udb udp))))))))
+                                                               (list '/ 1 (list '** udb udp)) x))))))
        ;; else
        'FAIL))
    :else 'FAIL))
