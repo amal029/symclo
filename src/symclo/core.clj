@@ -602,9 +602,7 @@
             (= (count v) 0) 0
             :else (reduce #(list '+ % %2) v)))))
 
-
-;;; The main automatic simplification function
-(defn simplify* 
+(defn- simplify** 
   "Automatic simplification of an expression."
   
   [u]
@@ -612,7 +610,7 @@
          [:number] u
          [:symbol] u
          [:fracop] (simplify-rational-number u)
-         [_] (let [v (map-indexed #(if-not (= % 0) (simplify* %2) %2) u)]
+         [_] (let [v (map-indexed #(if-not (= % 0) (simplify** %2) %2) u)]
                (match [(kind v)]
                       [:powop] (simplify-power v)
                       [:prodop] (simplify-product (get-prod-operands (rest v)))
@@ -621,6 +619,13 @@
                       [:diffop] (simplify-diff (rest v))
                       [:factop] (simplify-factorial v)
                       [:function] (simplify-function v)))))
+
+(defn simplify* 
+  "Automatic simplification of an expression."
+  [u]
+  (loop [r (simplify** u)
+         r1 (simplify** r)] 
+    (if-not (= r r1) (recur r1 (simplify** r)) r)))
 
 (defmacro simplify 
   "Macro that calls simplify*"

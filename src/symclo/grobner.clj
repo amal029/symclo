@@ -11,7 +11,7 @@
 (set! *assert* true)
 (def ^:private third (comp first nnext))
 
-(defn- g-reduce
+(defn g-reduce
   "Reduction of u with symbols in L with respect to side relations F."
   [u F L] 
   (if (not= u 0) 
@@ -22,7 +22,7 @@
            m (util/lm R L)
            f (nth F i)
            Q (simp/simplify* (list '/ m (util/lm f L)))]
-      (let [[R c i] (if (= (simp/kind (natural/denom Q)) :number)
+      (let [[R c i] (if (= (simp/kind (simp/simplify* (natural/denom Q))) :number)
                       [((comp simp/simplify* expand/expand* simp/simplify*) (list '- R (list '* Q f)))
                        (map-indexed #(if (= % i) (simp/simplify* (list '+ %2 Q)) %2) c)
                        0]
@@ -35,15 +35,18 @@
           [(apply vector c) r]))) 
     [(apply vector (take (count F) (iterate identity 0))) 0]))
 
-(defn- s-poly [u v L]
-  (let [d (util/mv-lcm (util/lm u L) (util/lm v L))
-        f (simp/simplify* (list '* u (list '/ d (util/lm u L))))
-        s (simp/simplify* (list '* v (list '/ d (util/lm v L))))]
-    (simp/simplify* (list '- f s))))
+(defn s-poly 
+  "Get the s-polynomial of u and v w.r.t ordered sequence L"
+  [u v L]
+  (let [d (util/mv-lcm (util/lm u L) (util/lm v L) L)
+        f (simp/simplify* (expand/expand* (list '* u (first (util/mv-polynomial-division d (util/lm u L) L)))))
+        s (simp/simplify* (expand/expand* (list '* v (first (util/mv-polynomial-division d (util/lm v L) L)))))]
+    ;; FIXME: I need 2 simplifies sometimes, because the 0 identity in addition seems to not get deleted??
+    (simp/simplify* (simp/simplify* (list '- f s)))))
 
 (defn g-basis
   "Calculate the grobner basis given basis F and the ordered list of
-  symbols L in F" 
+   symbols L in F" 
   
   [F L]
   (if-not (empty? F) 
@@ -51,14 +54,16 @@
           b (take (dec (count G)) (iterate identity G))
           c (map-indexed #(drop (inc %) %2) b)
           P (mapcat (fn [l m] (map #(vector % %2) (take (count m) (iterate identity l)) m)) (butlast G) c)]
-      (loop [s (s-poly (ffirst P) (ffirst P) L)
+      (loop [r (second (g-reduce (s-poly (first (first P)) (second (first P)) L) G L))
              P (rest P)
-             r (second (g-reduce s G L))]
+             G G]
         (let [[P G] (if-not (= r 0)
                       [(concat P (map #(vector % r) G))
                        (concat G [r])]
                       [P G])]
           (if-not (empty? P)
-            (recur (s-poly (ffirst P) (ffirst P) L) (rest P) (second (g-reduce (s-poly (ffirst P) (ffirst P) L) G L)))
+            (recur (second (g-reduce (s-poly (first (first P)) (second (first P)) L) G L)) 
+                   (rest P)
+                   G)
             G))))
     F))

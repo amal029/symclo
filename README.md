@@ -35,7 +35,7 @@ Multivariate Polynomial gcd
 
 Multivariate Polynomial lcm
 
-Groebner basis calculation in Q and Z domains (untested)
+Groebner basis calculation in Q and Z domains
 
 Multivariate Polynomial expansion (untested)
 
@@ -565,6 +565,29 @@ symclo.core> (util/mv-gcd u v ['x 'y] 'Z)
 symclo.core> (util/mv-lcm u v ['x 'y] 'Z)
 
 (* (* (** (+ (* x y) (** y 2)) -1) (+ (* (* -1 (** x 2)) y) (** y 3))) (+ (+ (* (** x 2) y) (* (* 2 x) (** y 2))) (** y 3)))
+
+```
+
+#### Gr\:obner bassis
+
+``` clojure
+
+symclo.core=> (def f1 (simplify* '(+ (* x y) x 1)))
+#'symclo.core/f1
+
+symclo.core=> (def f2 (simplify* '(+ 1 y (** x 2) (* x (** y 2)))))
+#'symclo.core/f2
+
+;;; The grobner basis calculation
+symclo.core=> (time (grobner/g-basis [f1 f2] ['x 'y]))
+"Elapsed time: 424.598812 msecs"
+((+ (+ 1 x) (* x y)) (+ (+ (+ 1 (** x 2)) y) (* x (** y 2))) (+ (+ -1 x) (* -2 y)) (+ (+ 2 (* 3 y)) (* 2 (** y 2))))
+
+;;; Grobner basis calculation is not always the fastest!
+symclo.core=> (def f1 (simplify* '(+ 6 (* 3 (** x 2)) (* 2 y (** x 3)))))
+#'symclo.core/f1
+symclo.core=> (def f2 (simplify* '(+ 1 y x (* 5 (** x 2)) (* 3 (** y 2)))))
+#'symclo.core/f2
 
 ```
 
