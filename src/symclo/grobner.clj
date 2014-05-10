@@ -41,8 +41,7 @@
   (let [d (util/mv-lcm (util/lm u L) (util/lm v L) L)
         f (simp/simplify* (expand/expand* (list '* u (first (util/mv-polynomial-division d (util/lm u L) L)))))
         s (simp/simplify* (expand/expand* (list '* v (first (util/mv-polynomial-division d (util/lm v L) L)))))]
-    ;; FIXME: I need 2 simplifies sometimes, because the 0 identity in addition seems to not get deleted??
-    (simp/simplify* (simp/simplify* (list '- f s)))))
+    (simp/simplify* (list '- f s))))
 
 (defn g-basis
   "Calculate the grobner basis given basis F and the ordered list of
