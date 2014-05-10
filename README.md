@@ -568,7 +568,7 @@ symclo.core> (util/mv-lcm u v ['x 'y] 'Z)
 
 ```
 
-#### Grobner bassis
+#### Grobner basis
 
 ``` clojure
 
