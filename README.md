@@ -568,7 +568,7 @@ symclo.core> (util/mv-lcm u v ['x 'y] 'Z)
 
 ```
 
-#### Gr\:obner bassis
+#### Grobner bassis
 
 ``` clojure
 
