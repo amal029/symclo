@@ -46,7 +46,7 @@
 
 (defn g-basis
   "Calculate the grobner basis given basis F and the ordered list of
-   symbols L in F" 
+   symbols L in F. Uses Bucherger's algorithm" 
   
   [F L]
   (if-not (empty? F) 
