@@ -35,6 +35,22 @@
           [(apply vector c) r]))) 
     [(apply vector (take (count F) (iterate identity 0))) 0]))
 
+(defn elim-poly 
+  "Eliminate redundant polynomials from the generated grobner basis."
+  
+  [G L]
+  (if (>= (count G) 2)
+    (loop [G G
+           res []] 
+      (let [res 
+            (if-not (empty? (concat res (rest G)))
+              (if-not (= (second (g-reduce (first G) (concat res (rest G)) L)) 0) (concat res [(first G)]) res)
+              (concat res [(first G)]))]
+        (if-not (empty? (rest G))
+          (recur (rest G) res)
+          res)))
+    G))
+
 (defn s-poly 
   "Get the s-polynomial of u and v w.r.t ordered sequence L"
   [u v L]
@@ -44,8 +60,9 @@
     (simp/simplify* (list '- f s))))
 
 (defn g-basis
-  "Calculate the grobner basis given basis F and the ordered list of
-   symbols L in F. Uses Bucherger's algorithm" 
+  "Calculate the grobner basis given Ideal F and the ordered list of
+   symbols L in F. Uses Buchberger's algorithm. Only lexicographical
+   ordering of monomials is supported as of now."
   
   [F L]
   (if-not (empty? F) 
@@ -64,5 +81,5 @@
             (recur (second (g-reduce (s-poly (first (first P)) (second (first P)) L) G L)) 
                    (rest P)
                    G)
-            G))))
+            (elim-poly G L)))))
     F))
