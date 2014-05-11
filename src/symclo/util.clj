@@ -171,6 +171,7 @@
       (let [lcr (polynomial-lce r x)
             s (simp/simplify* (list '/ lcr lcv))
             q (simp/simplify* (list '+ q (list '* s (list '** x (list '- m n)))))
+            ;; Should expand be moved inside?
             r (simp/simplify* (expand/expand* (simp/simplify* (list '- (list '- r (list '* (list '** x m) lcr))
                                                                     (list '* (list '* s (list '** x (list '- m n)))
                                                                           (list '- v (list '* (list '** x n) lcv)))))))
@@ -244,9 +245,13 @@
              [q r m] (if (not= (second d) 0)
                        [q r m]
                        [(simp/simplify* (list '+ (list '* (first d) (list '** x (- m n))) q)) ;q
-                        (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* v (first d) (list '** x (- m n))))))) ;r
+                        (simp/simplify* (expand/expand* (simp/simplify* (list '- r 
+                                                                              (expand/expand* (simp/simplify* (list '* v (first d) (list '** x (- m n))))))))) ;r
                         ;; this is a bit sucky, FIXME!
-                        (degree-polynomial (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* v (first d) (list '** x (- m n))))))) x) ;m
+                        (degree-polynomial (simp/simplify* (expand/expand* (simp/simplify* (list '- r 
+                                                                                                 (expand/expand* 
+                                                                                                  (simp/simplify*
+                                                                                                   (list '* v (first d) (list '** x (- m n))))))))) x) ;m
                         ])]
          (if (and (not= r 0) (= (second d) 0)) 
            (recur x r m n q lcv d)
@@ -279,7 +284,8 @@
          vl (lm v l)
          f (G r vl l)]
     (let [q (simp/simplify* (list '+ q f))
-          r (simp/simplify* (expand/expand* (simp/simplify* (list '- r (list '* f v)))))
+          ;; The change I made here needs to be made everywhere else?
+          r (simp/simplify* (expand/expand* (simp/simplify* (list '- r (simp/simplify* (expand/expand* (simp/simplify* (list '* f v))))))))
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
 
@@ -326,6 +332,7 @@
     (if (and (not= s 0) (>= m n))
       (let [lcs (coefficient-polynomial-gpe s x m)
             p (simp/simplify* (list '+ (list '* lcv p) (list '* lcs (list '** x (list '- m n)))))
+            ;; Should expand be moved inside?
             s ((comp simp/simplify* expand/expand* simp/simplify*)
                (list '- (list '* lcv s) (list '* lcs v (list '** x (list '- m n)))))
             sigma (inc sigma)
