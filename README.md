@@ -631,7 +631,7 @@ symclo.core=> nat
 (* (* (** (+ b c) -2) (** (+ (* a b) (* a c)) -1)) (+ (* (+ (* a b) (* a c)) (+ (* (* a b) c) (* a (** c 2)))) (* (** (+ b c) 2) (+ (* (** a 2) b) (* (* -1 a) (+ (* a b) (* a c)))))))
 
 ;;; The result
-symclo.core=> (natural/rational-simplify nat ['a 'b 'c])
+symclo.core=> (natural/rational-simplify* nat ['a 'b 'c])
 
 0
 
