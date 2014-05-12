@@ -1,7 +1,6 @@
 (ns symclo.util
   (:gen-class))
 (use '[clojure.core.match :only (match)])
-(use 'clojure.math.numeric-tower)
 (use 'clojure.tools.trace)
 (require '[symclo.trig :as trig])
 (require '[symclo.core :as simp])
@@ -289,7 +288,10 @@
           f (G r vl l)]
       (if-not (= 0 f) (recur q r vl f) [q r]))))
 
-(defn- normalize* [u L K]
+(defn- normalize* 
+  "Should not be called. Call normalize instead."
+  
+  [u L K]
   (cond
    (and (= K 'Z) (= (simp/kind u) :number))
    (cond 

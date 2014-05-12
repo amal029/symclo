@@ -4,6 +4,7 @@
 (use 'clojure.math.numeric-tower)
 (use 'clojure.tools.trace)
 (require '[symclo.core :as simp])
+(require '[symclo.expand :as expand])
 (require '[symclo.util :as util])
 
 (defn- third [u] (first (nnext u)))
@@ -49,6 +50,28 @@
       (list '+ u v)
       (list '* (natural-sum (list '* m s) (list '* n r)) (list '** (list '* r s) -1)))))
 
+(defn rational-simplify* 
+  "Rationally simplifies the expression u, i.e., numer(u) and denom(u)
+  are relatively prime and in unit normal form. l is the list of
+  indeterminates in u. This function only works in the coefficient
+  integer domain Z."
+  
+  [u l]
+  (let [n (simp/simplify* (expand/expand* (simp/simplify* (numer u))))
+        d (simp/simplify* (expand/expand* (simp/simplify* (denom u))))
+        g (util/mv-gcd n d l 'Z)
+        n (first (util/mv-rec-polynomial-div n g l))
+        d (first (util/mv-rec-polynomial-div d g l))
+        nn (#'util/normalize* n l 'Z)
+        nd (#'util/normalize* d l 'Z)
+        nn (simp/simplify* (list '* nn nd))
+        n (simp/simplify* (list '* n nn))
+        d (simp/simplify* (list '* d nn))]
+    (cond 
+     (= n 0) 0
+     (= d 0) 'UNDEFINED
+     :else (simp/simplify* (list '/ n d)))))
+
 (defn natural*
   "Rationalize an expression, e.g.: 
    (natural (+ (/ 1 x) (/ 1 y)) = (/ (+ x y) (* x y))). 
@@ -60,9 +83,15 @@
    (= (simp/kind u) :sumop) (natural-sum (natural* (fnext u)) (natural* (third u)))
    :else u))
 
+(defmacro rational-simplify 
+  "Calls rational-simplify* after rationalizing via natural* on arg with
+  indeterminates in list. Automatic simplification is implicit." 
+  
+  [arg list]
+  `(rational-simplify* ((comp simp/simplify* natural* simp/simplify*)'~arg) '(~@list)))
+
 (defmacro natural 
   "Calls natural* on args. automatic simplification is implicit."
-  
   [& args]
   `(map (comp simp/simplify* natural* simp/simplify*) '(~@args)))
 
