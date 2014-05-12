@@ -600,14 +600,14 @@ symclo.core=> (time (grobner/g-basis [f1 f2] ['x 'y]))
 ```
 #### Rational simplification
 ``` clojure
+symclo.core=> (require '[symclo.rationalize :as natural])
+
+nil
 
 symclo.core> (natural/rational-simplify (/ (+ (* z (** z 2)) (* z y)) (** z 3)) [y z])
 
 (* (** z -2) (+ y (** z 2)))
 
-symclo.core=> (require '[symclo.rationalize :as natural])
-
-nil
 
 ;;; Manual simplfication -- useful for very large expressions.
 symclo.core=> (def f1 (simplify* '(/ 1 (+ (/ 1 a) (/ c (* a b))))))
