@@ -15,23 +15,23 @@
   [u x]
   (if (= (symbol? x))
     (match [(simp/kind u)]
-           [:symbol] (if (= x u) 1 (list '%deriv u x))
+           [:symbol] (if (= x u) 1 (list '%deriv (list u x)))
            [:powop] (let [[_ v w] u]
                       (cond 
                        true ;; (or (= (simp/kind w) :fracop) (= (simp/kind w) :number))
                        (simp/simplify* (list '+ (list '* (list '* w (list '** v (list '- w 1))) (deriv* v x)) 
                                              (list '* (list '* (deriv* w x) (list '** v w)) (list '%ln v))))
-                       :else (list '%deriv u x)))
+                       :else (list '%deriv (list u x))))
            [:sumop] (simp/simplify* (list '+ (deriv* (second u) x) (deriv* (third u) x)))
            [:prodop] (simp/simplify* (list '+ (list '* (third u) (deriv* (second u) x)) (list '* (second u) (deriv* (third u) x))))
            [:function] (cond
                         (= (trig/trig-kind u) :sin) (simp/simplify* (list '* (list 'cos (second u)) (deriv* (second u) x)))
                         (= (trig/trig-kind u) :cos) (simp/simplify* (list '* (list '* -1 (list 'sin (second u))) (deriv* (second u) x)))
-                        :else (list '%deriv u x))
+                        :else (list '%deriv (list u x)))
            [_] (cond 
                 (util/free-of u x) 0
-                :else (list '%deriv u x)))
-    (list '%deriv u x)))
+                :else (list '%deriv (list u x))))
+    (list '%deriv (list u x))))
 
 (defmacro deriv 
   "Calls deriv* on arg w.r.t sym. autosimplification is implicit."
