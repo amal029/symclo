@@ -10,14 +10,22 @@
 
 
 (defn- transform-ode [w x y]
-  (let [v (natural/rational-simplify* ((comp simp/simplify* natural/natural* simp/simplify*) (list '- (first w) (second w))) [x y])
+  (let [v (natural/rational-simplify* ((comp simp/simplify* natural/natural* simp/simplify*) w) [x y])
         n ((comp simp/simplify* natural/numer) v)]
     [(util/coefficient-polynomial-gpe n (list '%deriv (list y x)) 0)
      (util/coefficient-polynomial-gpe n (list '%deriv (list y x)) 1)]))
 
-;;; TODO
 (defn- separable-ode [m n x y]
-  'FAIL)
+  (cond 
+   (and (not= (util/separate-factors n [x y]) 'FAIL) (not= (util/separate-factors m [x y]) 'FAIL))
+   (let [[x y] (util/separate-factors m [x y])
+         [x' y'] (util/separate-factors n [x y])
+         m (simp/simplify* (list '/ m (list '* x' y)))
+         n (simp/simplify* (list '/ n (list '* x' y)))
+         mi (simp/simplify* (list '+ (integral/integrate* m x) '%C))
+         ni (integral/integrate* n y)]
+     (natural/rational-simplify* (simp/simplify* (natural/natural* (simp/simplify* (list '- ni mi))))))
+   :else 'FAIL))
 
 (defn- solve-exact [m n x y]
   (cond 

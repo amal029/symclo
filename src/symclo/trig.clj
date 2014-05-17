@@ -532,7 +532,10 @@
         u (natural/natural* u)
         ;; _ (prn "u6:" u)
         w (simp/simplify* u)
-        ;; _ (prn "w:" w)
+        ;; FIXME: we should be performin rational
+        ;; simplification here, but how to choose indeterminates is the
+        ;; question.  
+        ;; w ((comp simp/simplify* natural/rational-simplify*) w)
         n (expand-trig (natural/numer w))
         ;; _ (prn "expand n:" n)
         n (contract-trig n)

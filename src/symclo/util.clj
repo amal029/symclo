@@ -448,3 +448,42 @@
                (back-substitute alist symbols)))
            ;; step-2bii
            (recur i j (swap alist i toswaprow))))))))
+
+
+(defn- sfactors [u x] 
+  (let [u ((comp simp/simplify* expand/expand*) u)
+        llist (cond
+               (= (simp/kind u) :prodop) (let [ops (simp/get-prod-operands (rest u))]
+                                           (map simp/simplify* (reduce #(if (free-of %2 x) 
+                                                                          [(first %) (list '* (second %) %2)] 
+                                                                          [(list '* (first %) %2) (second %)]) [1 1] ops)))
+               (= (simp/kind u) :sumop) (let [ops (simp/get-sum-operands (rest u))] (map #(sfactors % x) ops))
+               (= (simp/kind u) :powop) (if (free-of u x) [1 u] [u 1])
+               :else (if (free-of u x) [1 u] [u 1]))]
+    llist))
+
+(defn separate-factors 
+  "Separates all monomials from u that are free of (first list). list is
+   the ordered set of symbols in u. Returns a two element list:
+   expression of x and expression free of x."
+  
+  [u ll]
+  (let [llist (sfactors u (first ll))
+        ;; FIXME: nasty hack!!
+        [llist pp] (if-not (coll? (first llist)) [[llist] false] [llist true])
+        llist (group-by #(first %) llist)
+        llist (map (fn [part] (let [key (ffirst part)
+                                    res (simp/simplify* (reduce #(list '+ % (second %2)) 0 part))]
+                                [key res])) (vals llist))
+        coefs (map second llist)
+        gcd (cond
+             (>= (count coefs) 2) 
+             (reduce #(mv-gcd % %2 (rest ll) 'Q) 0 coefs)
+             (= (count coefs) 1)
+             (normalize (first coefs) (rest ll) 'Q)
+             :else 0)]
+    (cond
+     (and pp (not= 1 gcd))
+     [(simp/simplify* (reduce #(list '+ % %2) 0 (map first llist))) (simp/simplify* (reduce #(list '+ % %2) 0 coefs))]
+     (not pp) [(simp/simplify* (reduce #(list '+ % %2) 0 (map first llist))) (simp/simplify* (reduce #(list '+ % %2) 0 coefs))]
+     :else 'FAIL)))
